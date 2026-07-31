@@ -54,7 +54,106 @@ const serviceCategories = [
   {
     emoji: "🏠",
     title: "Maintenance",
-    description: "Inspections, preventative upkeep, seasonal checkups",
+    description: "Appliances, HVAC tune-ups, seasonal inspections, preventative upkeep",
+  },
+  {
+    emoji: "🏡",
+    title: "Exterior Services",
+    description: "Pressure washing, window cleaning, gutter cleaning, deck restoration",
+  },
+  {
+    emoji: "🛡️",
+    title: "Home Safety",
+    description: "Safety inspections, smoke/CO detectors, childproofing, security consultations",
+  },
+  {
+    emoji: "📦",
+    title: "Home Organization",
+    description: "Closet, garage, whole-home organization, decluttering",
+  },
+  {
+    emoji: "🐾",
+    title: "Pet Services",
+    description: "Dog walking, pet sitting, waste cleanup, grooming",
+  },
+];
+
+const pricingCategories = [
+  {
+    title: "🔧 Repairs",
+    items: [
+      { label: "Plumbing", price: "$85–150/hr" },
+      { label: "Emergency plumbing", price: "$150–250/hr" },
+      { label: "Electrical", price: "$90–160/hr" },
+      { label: "HVAC diagnostic", price: "$75–125 flat" },
+      { label: "HVAC repair", price: "$95–175/hr" },
+      { label: "Handyman", price: "$65–95/hr ($150 min)" },
+    ],
+  },
+  {
+    title: "🧹 Cleaning",
+    items: [
+      { label: "Standard clean", price: "$120–250" },
+      { label: "Deep clean", price: "$250–500" },
+      { label: "Move in/out", price: "$300–600" },
+      { label: "Recurring discount", price: "10–15%" },
+    ],
+  },
+  {
+    title: "🌿 Lawn Care",
+    items: [
+      { label: "Mowing", price: "$35–75/visit" },
+      { label: "Landscaping", price: "$150–500+" },
+      { label: "Seasonal cleanup", price: "$200–600" },
+      { label: "Fertilization", price: "$50–100/treatment" },
+    ],
+  },
+  {
+    title: "🏠 Maintenance",
+    items: [
+      { label: "Appliance diagnostic", price: "$75–125" },
+      { label: "Appliance repair", price: "$50–150/hr" },
+      { label: "Appliance install", price: "$100–300" },
+      { label: "HVAC tune-up", price: "$75–150" },
+      { label: "Gutter cleaning", price: "$100–250" },
+      { label: "Home inspection", price: "$200–400" },
+    ],
+  },
+  {
+    title: "🏡 Exterior",
+    items: [
+      { label: "Pressure wash house", price: "$150–400" },
+      { label: "Pressure wash driveway", price: "$75–150" },
+      { label: "Pressure wash deck", price: "$100–250" },
+      { label: "Window cleaning", price: "$150–400" },
+    ],
+  },
+  {
+    title: "📦 Home Organization",
+    items: [
+      { label: "Closet", price: "$200–500" },
+      { label: "Garage", price: "$300–800" },
+      { label: "Whole-home", price: "$500–2,000+" },
+      { label: "Decluttering consult", price: "$100–200/hr" },
+    ],
+  },
+  {
+    title: "🛡️ Home Safety",
+    items: [
+      { label: "Safety inspection", price: "$150–300" },
+      { label: "Smoke/CO detectors", price: "$75–200" },
+      { label: "Childproofing", price: "$200–600" },
+      { label: "Security consult", price: "$100–200" },
+    ],
+  },
+  {
+    title: "🐾 Pet Services",
+    items: [
+      { label: "Dog walking", price: "$20–30/30min" },
+      { label: "Pet sitting", price: "$40–75/day" },
+      { label: "Waste cleanup", price: "$50–100/mo" },
+      { label: "Grooming", price: "$40–90" },
+    ],
   },
 ];
 
@@ -134,7 +233,7 @@ function Home() {
           <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             What we handle
           </h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {serviceCategories.map((cat) => (
               <div
                 key={cat.title}
@@ -151,8 +250,48 @@ function Home() {
         </div>
       </section>
 
-      {/* ── How It Works ── */}
+      {/* ── Transparent Pricing ── */}
       <section className="bg-gray-50 py-16 sm:py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+            Transparent Pricing
+          </h2>
+          <p className="mt-3 text-center text-gray-500">
+            Know what to expect before you book.
+          </p>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {pricingCategories.map((cat) => (
+              <div
+                key={cat.title}
+                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+              >
+                <h3 className="text-base font-semibold text-gray-900">
+                  {cat.title}
+                </h3>
+                <ul className="mt-3 space-y-1.5">
+                  {cat.items.map((item) => (
+                    <li
+                      key={item.label}
+                      className="flex items-baseline justify-between gap-2 text-sm"
+                    >
+                      <span className="text-gray-600">{item.label}</span>
+                      <span className="shrink-0 font-medium text-gray-900">
+                        {item.price}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 text-center text-xs text-gray-400">
+            All prices are estimates. Final quotes provided after consultation.
+          </p>
+        </div>
+      </section>
+
+      {/* ── How It Works ── */}
+      <section className="bg-white py-16 sm:py-24">
         <div className="mx-auto max-w-5xl px-6">
           <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             How it works
@@ -174,7 +313,7 @@ function Home() {
       </section>
 
       {/* ── Request Service Form ── */}
-      <section id="request-form" className="bg-white py-16 sm:py-24">
+      <section id="request-form" className="bg-gray-50 py-16 sm:py-24">
         <div className="mx-auto max-w-lg px-6">
           <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Request a service
@@ -274,6 +413,10 @@ function Home() {
                   <option value="cleaning">🧹 Cleaning</option>
                   <option value="lawn-care">🌿 Lawn Care</option>
                   <option value="maintenance">🏠 Maintenance</option>
+                  <option value="exterior">🏡 Exterior Services</option>
+                  <option value="safety">🛡️ Home Safety</option>
+                  <option value="organization">📦 Home Organization</option>
+                  <option value="pet-services">🐾 Pet Services</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -306,6 +449,26 @@ function Home() {
               </button>
             </form>
           )}
+        </div>
+      </section>
+
+      {/* ── Contractor CTA Banner ── */}
+      <section className="bg-white py-12 sm:py-16">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 p-8 text-center sm:p-10">
+            <h2 className="text-xl font-bold text-indigo-900 sm:text-2xl">
+              Are you a home services professional?
+            </h2>
+            <p className="mt-2 text-indigo-700">
+              Join ServiceHQ and grow your business. Connect with homeowners who need your skills.
+            </p>
+            <a
+              href="/contractors"
+              className="mt-5 inline-block rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700"
+            >
+              Learn more for contractors
+            </a>
+          </div>
         </div>
       </section>
 
