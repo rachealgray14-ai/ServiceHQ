@@ -184,7 +184,7 @@ function Contractors() {
             Grow your business with ServiceHQ
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-blue-100 sm:text-xl">
-            Join Tennessee's trusted home-services platform and connect with
+            Join Tennessee's statewide home-services platform and connect with
             homeowners who need your skills.
           </p>
           <a
@@ -560,7 +560,7 @@ function Contractors() {
       {/* ── Footer ── */}
       <footer className="mt-auto bg-gray-900 py-10 text-center text-gray-400">
         <p className="text-sm font-medium text-white">
-          ServiceHQ — Serving Tennessee homeowners
+          ServiceHQ — Serving homeowners across all of Tennessee
         </p>
         <p className="mt-1 text-sm">&copy; 2025 ServiceHQ. All rights reserved.</p>
       </footer>
