@@ -215,15 +215,23 @@ function Home() {
             Your home, serviced right.
           </h1>
           <p className="mt-4 max-w-xl text-lg text-blue-100 sm:text-xl">
-            Connecting Tennessee homeowners with vetted local contractors for
-            repairs, cleaning, lawn care, and maintenance.
+            Connecting homeowners across all of Tennessee with vetted local
+            contractors for repairs, cleaning, lawn care, and maintenance.
           </p>
-          <a
-            href="#request-form"
-            className="mt-8 inline-block rounded-lg bg-white px-6 py-3 font-semibold text-blue-700 shadow-md transition hover:bg-blue-50"
-          >
-            Request a Service
-          </a>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <a
+              href="/quote"
+              className="inline-block rounded-lg bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-md transition hover:bg-blue-50"
+            >
+              Get a Free Quote
+            </a>
+            <a
+              href="#request-form"
+              className="inline-block rounded-lg border border-white/70 bg-white/10 px-6 py-3 text-center font-semibold text-white shadow-md transition hover:bg-white/20"
+            >
+              Request a Service
+            </a>
+          </div>
         </div>
       </header>
 
@@ -319,7 +327,8 @@ function Home() {
             Request a service
           </h2>
           <p className="mt-3 text-center text-gray-500">
-            Tell us what you need and we'll match you with the right pro.
+            Tell us what you need and we'll match you with the right pro —
+            anywhere in Tennessee.
           </p>
 
           {submitted ? (
@@ -475,7 +484,7 @@ function Home() {
       {/* ── Footer ── */}
       <footer className="mt-auto bg-gray-900 py-10 text-center text-gray-400">
         <p className="text-sm font-medium text-white">
-          {businessName} — Serving Tennessee homeowners
+          {businessName} — Serving homeowners across all of Tennessee
         </p>
         <p className="mt-1 text-sm">&copy; 2025 {businessName}. All rights reserved.</p>
       </footer>
