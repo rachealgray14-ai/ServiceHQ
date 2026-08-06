@@ -1,10 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { readFile, appendFile } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { useState } from "react";
+import { ensureDatabaseSchema } from "../db/schema";
 
 // Read the business name from site.json at request time.
 const getBusinessName = createServerFn({ method: "GET" }).handler(async () => {
+  try {
+    await ensureDatabaseSchema();
+  } catch (error) {
+    console.error("Database schema initialization skipped:", error);
+  }
   try {
     const cfg = JSON.parse(await readFile("site.json", "utf8")) as {
       businessName?: string;
@@ -15,18 +21,13 @@ const getBusinessName = createServerFn({ method: "GET" }).handler(async () => {
   }
 });
 
-// Handle service request form submissions — append as newline-delimited JSON.
+// Handle service request form submissions in Postgres.
 const submitServiceRequest = createServerFn({ method: "POST" })
   .handler(async (data: { name: string; email: string; phone: string; serviceType: string; message: string }) => {
-    const entry = {
-      ...data,
-      submittedAt: new Date().toISOString(),
-    };
-    await appendFile(
-      "/home/team/shared/service-requests.json",
-      JSON.stringify(entry) + "\n",
-      "utf8"
-    );
+    await ensureDatabaseSchema();
+    const { sql } = await import("../db");
+    await sql()`INSERT INTO service_requests (name, email, phone, service_type, message)
+      VALUES (${data.name}, ${data.email}, ${data.phone}, ${data.serviceType}, ${data.message})`;
     return { success: true };
   });
 
