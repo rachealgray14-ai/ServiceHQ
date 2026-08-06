@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { appendFile } from "node:fs/promises";
 import { useState } from "react";
+import { ensureDatabaseSchema } from "../db/schema";
+import { sql } from "../db";
 
-// Handle contractor application submissions — append as newline-delimited JSON.
+// Handle contractor applications in Postgres.
 const submitContractorApplication = createServerFn({ method: "POST" })
   .handler(async (data: {
     name: string;
@@ -14,17 +15,17 @@ const submitContractorApplication = createServerFn({ method: "POST" })
     yearsExperience: string;
     licenseNumber: string;
   }) => {
-    const entry = {
-      ...data,
-      submittedAt: new Date().toISOString(),
-    };
-    await appendFile(
-      "/home/team/shared/contractor-applications.json",
-      JSON.stringify(entry) + "\n",
-      "utf8"
-    );
+    await ensureDatabaseSchema();
+    await sql()`INSERT INTO contractors
+      (name, company_name, email, phone, service_type, years_experience, license_number)
+      VALUES (${data.name}, ${data.companyName}, ${data.email}, ${data.phone}, ${data.serviceType}, ${parseExperience(data.yearsExperience)}, ${data.licenseNumber})`;
     return { success: true };
   });
+
+function parseExperience(value: string): number | null {
+  const match = value.match(/\\d+/);
+  return match ? Number(match[0]) : null;
+}
 
 export const Route = createFileRoute("/contractors")({
   component: Contractors,
