@@ -45,7 +45,7 @@ export async function ensureDatabaseSchema() {
   await query`CREATE TABLE IF NOT EXISTS jobs (
     id SERIAL PRIMARY KEY,
     service_request_id INTEGER NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
-    contractor_id INTEGER NOT NULL REFERENCES contractors(id),
+    contractor_id INTEGER REFERENCES contractors(id),
     customer_id INTEGER NOT NULL REFERENCES customers(id),
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','accepted','in_progress','completed','cancelled','disputed')),
     scheduled_at TIMESTAMPTZ,
@@ -56,6 +56,10 @@ export async function ensureDatabaseSchema() {
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
   )`;
+  // Jobs are created the moment a customer books, before a contractor is matched,
+  // so the contractor can be unassigned. Existing databases created this column
+  // NOT NULL, so relax it idempotently (safe no-op if already nullable).
+  await query`ALTER TABLE jobs ALTER COLUMN contractor_id DROP NOT NULL`;
   await query`CREATE TABLE IF NOT EXISTS payments (
     id SERIAL PRIMARY KEY,
     job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
