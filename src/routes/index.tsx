@@ -227,7 +227,7 @@ function Home() {
               Get a Free Quote
             </a>
             <a
-              href="#request-form"
+              href="/book"
               className="inline-block rounded-lg border border-white/70 bg-white/10 px-6 py-3 text-center font-semibold text-white shadow-md transition hover:bg-white/20"
             >
               Request a Service
@@ -321,15 +321,19 @@ function Home() {
         </div>
       </section>
 
-      {/* ── Request Service Form ── */}
+      {/* ── Quick Inquiry Form ── */}
       <section id="request-form" className="bg-gray-50 py-16 sm:py-24">
         <div className="mx-auto max-w-lg px-6">
           <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Request a service
+            Quick inquiry
           </h2>
           <p className="mt-3 text-center text-gray-500">
-            Tell us what you need and we'll match you with the right pro —
-            anywhere in Tennessee.
+            Just a quick question or not sure where to start? Send us a note.
+            For a scheduled booking,{" "}
+            <a href="/book" className="font-semibold text-indigo-600 hover:text-indigo-700">
+              book a service
+            </a>
+            .
           </p>
 
           {submitted ? (
