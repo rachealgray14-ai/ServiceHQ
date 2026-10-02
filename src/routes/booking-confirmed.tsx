@@ -16,9 +16,11 @@ const getBooking = createServerFn({ method: "POST" }).handler(
       SELECT sr.id AS request_id, sr.name, sr.email, sr.phone, sr.service_type,
              sr.message, sr.status AS request_status, sr.created_at,
              j.id AS job_id, j.status AS job_status, j.scheduled_at,
+             j.contractor_id, ct.name AS contractor_name, ct.company_name AS contractor_company,
              c.address, c.city, c.tn_county
       FROM service_requests sr
       LEFT JOIN jobs j ON j.service_request_id = sr.id
+      LEFT JOIN contractors ct ON ct.id = j.contractor_id
       LEFT JOIN customers c ON c.id = sr.customer_id
       WHERE sr.id = ${data.id}`;
     if (!row) return null;
@@ -34,6 +36,11 @@ const getBooking = createServerFn({ method: "POST" }).handler(
       createdAt: iso(row.created_at),
       jobId: row.job_id == null ? null : (row.job_id as number),
       jobStatus: row.job_status == null ? null : (row.job_status as string),
+      // Set by job routing in createBooking: a contractor was auto-matched, or
+      // the request is still waiting in the queue for a local pro.
+      contractorId: row.contractor_id == null ? null : (row.contractor_id as number),
+      contractorName: (row.contractor_name as string | null) ?? null,
+      contractorCompany: (row.contractor_company as string | null) ?? null,
       scheduledAt: iso(row.scheduled_at),
       address: row.address,
       city: row.city,
@@ -123,13 +130,26 @@ function BookingConfirmedPage() {
         ) : (
           <div className="space-y-6">
             <div className="rounded-2xl border border-green-200 bg-white p-8 text-center shadow-sm sm:p-10">
-              <div className="text-5xl">✅</div>
+              <div className="text-5xl">{booking.contractorId ? "🤝" : "✅"}</div>
               <h2 className="mt-4 text-2xl font-bold text-gray-900">
                 Booking #{booking.requestId}
               </h2>
-              <p className="mt-2 text-sm text-gray-500">
-                We'll match you with a vetted pro and confirm within 24 hours.
-              </p>
+              {booking.contractorId ? (
+                <p className="mt-2 text-sm text-gray-500">
+                  Great news — a vetted local pro has already been matched to your job
+                  {booking.contractorCompany
+                    ? `: ${booking.contractorCompany}`
+                    : booking.contractorName
+                      ? `: ${booking.contractorName}`
+                      : ""}
+                  . We'll confirm your arrival time within 24 hours.
+                </p>
+              ) : (
+                <p className="mt-2 text-sm text-gray-500">
+                  We're finding the best local pro for your job — we'll match you
+                  shortly and confirm within 24 hours.
+                </p>
+              )}
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
@@ -143,6 +163,14 @@ function BookingConfirmedPage() {
                   <Row label="Requested date" value={fmtDate(booking.scheduledAt)} />
                 )}
                 <Row label="Request status" value={titleCase(booking.requestStatus)} />
+                <Row
+                  label="Matched pro"
+                  value={
+                    booking.contractorId
+                      ? (booking.contractorCompany || booking.contractorName || "Assigned")
+                      : "Matching you shortly"
+                  }
+                />
                 {booking.jobStatus && (
                   <Row label="Job status" value={titleCase(booking.jobStatus)} />
                 )}
