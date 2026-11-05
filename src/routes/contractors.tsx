@@ -180,17 +180,17 @@ function Contractors() {
     <div className="min-h-dvh flex flex-col">
       {/* ── Header ── */}
       <header className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-        <div className="mx-auto max-w-5xl px-6 py-20 sm:py-28">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+        <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-20 lg:py-28">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Grow your business with ServiceHQ
           </h1>
-          <p className="mt-4 max-w-2xl text-lg text-blue-100 sm:text-xl">
+          <p className="mt-4 max-w-2xl text-base text-blue-100 sm:text-lg lg:text-xl">
             Join Tennessee's statewide home-services platform and connect with
             homeowners who need your skills.
           </p>
           <a
             href="#contractor-form"
-            className="mt-8 inline-block rounded-lg bg-white px-6 py-3 font-semibold text-blue-700 shadow-md transition hover:bg-blue-50"
+            className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-lg bg-white px-6 py-3 font-semibold text-blue-700 shadow-md transition hover:bg-blue-50 sm:mt-8"
           >
             Apply now
           </a>
@@ -198,16 +198,16 @@ function Contractors() {
       </header>
 
       {/* ── Why ServiceHQ ── */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-white py-12 sm:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Why ServiceHQ?
           </h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
             {benefits.map((b) => (
               <div
                 key={b.title}
-                className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6"
               >
                 <div className="text-4xl">{b.emoji}</div>
                 <h3 className="mt-4 text-lg font-semibold text-gray-900">
@@ -221,12 +221,12 @@ function Contractors() {
       </section>
 
       {/* ── How You Get Paid ── */}
-      <section className="bg-gray-50 py-16 sm:py-24">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-gray-50 py-12 sm:py-24">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             How you get paid
           </h2>
-          <div className="mt-10 space-y-4 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="mt-8 space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:mt-10 sm:p-8">
             <div className="flex items-start gap-4">
               <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
                 1
@@ -269,12 +269,12 @@ function Contractors() {
       </section>
 
       {/* ── Types of Jobs ── */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-white py-12 sm:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Types of jobs you'll receive
           </h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
             {jobTypes.map((j) => (
               <div
                 key={j.title}
@@ -292,12 +292,12 @@ function Contractors() {
       </section>
 
       {/* ── Requirements ── */}
-      <section className="bg-gray-50 py-16 sm:py-24">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-gray-50 py-12 sm:py-24">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Requirements
           </h2>
-          <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <div className="mt-8 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:mt-10 sm:p-8">
             <ul className="space-y-3">
               {requirements.map((req) => (
                 <li key={req} className="flex items-start gap-3">
@@ -311,9 +311,9 @@ function Contractors() {
       </section>
 
       {/* ── Vetting & Onboarding ── */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-3xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-white py-12 sm:py-24">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Vetting &amp; onboarding
           </h2>
           <p className="mt-3 text-center text-gray-500">
@@ -339,9 +339,9 @@ function Contractors() {
       </section>
 
       {/* ── CTA / Application Form ── */}
-      <section id="contractor-form" className="bg-gray-50 py-16 sm:py-24">
-        <div className="mx-auto max-w-lg px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section id="contractor-form" className="bg-gray-50 py-12 sm:py-24">
+        <div className="mx-auto max-w-lg px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Ready to join?
           </h2>
           <p className="mt-3 text-center text-gray-500">
@@ -373,10 +373,11 @@ function Contractors() {
                   id="name"
                   name="name"
                   type="text"
+                  autoComplete="name"
                   required
                   value={formState.name}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="Your full name"
                 />
               </div>
@@ -392,10 +393,11 @@ function Contractors() {
                   id="companyName"
                   name="companyName"
                   type="text"
+                  autoComplete="organization"
                   required
                   value={formState.companyName}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="Your business name"
                 />
               </div>
@@ -411,10 +413,12 @@ function Contractors() {
                   id="email"
                   name="email"
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   required
                   value={formState.email}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="you@example.com"
                 />
               </div>
@@ -430,10 +434,12 @@ function Contractors() {
                   id="phone"
                   name="phone"
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   required
                   value={formState.phone}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="(555) 123-4567"
                 />
               </div>
@@ -451,7 +457,7 @@ function Contractors() {
                   required
                   value={formState.serviceType}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option value="" disabled>
                     Select a service…
@@ -480,7 +486,7 @@ function Contractors() {
                   required
                   value={formState.yearsExperience}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option value="" disabled>
                     Select…
@@ -503,10 +509,11 @@ function Contractors() {
                   id="licenseNumber"
                   name="licenseNumber"
                   type="text"
+                  autoComplete="off"
                   required
                   value={formState.licenseNumber}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="License number"
                 />
               </div>
@@ -514,7 +521,7 @@ function Contractors() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60"
+                className="min-h-[48px] w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60"
               >
                 {submitting ? "Submitting…" : "Submit Application"}
               </button>
@@ -524,12 +531,12 @@ function Contractors() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-2xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-white py-12 sm:py-24">
+        <div className="mx-auto max-w-2xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Frequently asked questions
           </h2>
-          <div className="mt-10 space-y-3">
+          <div className="mt-8 space-y-3 sm:mt-10">
             {faqs.map((faq, i) => (
               <div
                 key={i}
@@ -538,7 +545,7 @@ function Contractors() {
                 <button
                   type="button"
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="flex w-full items-center justify-between px-5 py-4 text-left"
+                  className="flex min-h-[52px] w-full items-center justify-between px-5 py-4 text-left"
                 >
                   <span className="font-medium text-gray-900">{faq.q}</span>
                   <span className="ml-4 shrink-0 text-lg text-gray-400 transition-transform duration-200"
@@ -559,7 +566,7 @@ function Contractors() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="mt-auto bg-gray-900 py-10 text-center text-gray-400">
+      <footer className="mt-auto bg-gray-900 px-4 py-10 text-center text-gray-400">
         <p className="text-sm font-medium text-white">
           ServiceHQ — Serving homeowners across all of Tennessee
         </p>

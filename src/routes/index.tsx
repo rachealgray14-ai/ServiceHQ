@@ -211,24 +211,24 @@ function Home() {
     <div className="min-h-dvh flex flex-col">
       {/* ── Hero ── */}
       <header className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-        <div className="mx-auto max-w-5xl px-6 py-20 sm:py-28">
-          <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+        <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20 lg:py-28">
+          <h1 className="text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Your home, serviced right.
           </h1>
-          <p className="mt-4 max-w-xl text-lg text-blue-100 sm:text-xl">
+          <p className="mt-4 max-w-xl text-base text-blue-100 sm:text-lg lg:text-xl">
             Connecting homeowners across all of Tennessee with vetted local
             contractors for repairs, cleaning, lawn care, and maintenance.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <a
               href="/quote"
-              className="inline-block rounded-lg bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-md transition hover:bg-blue-50"
+              className="flex min-h-[48px] items-center justify-center rounded-lg bg-white px-6 py-3 text-center font-semibold text-blue-700 shadow-md transition hover:bg-blue-50"
             >
               Get a Free Quote
             </a>
             <a
               href="/book"
-              className="inline-block rounded-lg border border-white/70 bg-white/10 px-6 py-3 text-center font-semibold text-white shadow-md transition hover:bg-white/20"
+              className="flex min-h-[48px] items-center justify-center rounded-lg border border-white/70 bg-white/10 px-6 py-3 text-center font-semibold text-white shadow-md transition hover:bg-white/20"
             >
               Request a Service
             </a>
@@ -237,16 +237,16 @@ function Home() {
       </header>
 
       {/* ── Service Categories ── */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-white py-12 sm:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             What we handle
           </h2>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {serviceCategories.map((cat) => (
               <div
                 key={cat.title}
-                className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+                className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md sm:p-6"
               >
                 <div className="text-4xl">{cat.emoji}</div>
                 <h3 className="mt-4 text-lg font-semibold text-gray-900">
@@ -260,15 +260,15 @@ function Home() {
       </section>
 
       {/* ── Transparent Pricing ── */}
-      <section className="bg-gray-50 py-16 sm:py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-gray-50 py-12 sm:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Transparent Pricing
           </h2>
           <p className="mt-3 text-center text-gray-500">
             Know what to expect before you book.
           </p>
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {pricingCategories.map((cat) => (
               <div
                 key={cat.title}
@@ -283,8 +283,8 @@ function Home() {
                       key={item.label}
                       className="flex items-baseline justify-between gap-2 text-sm"
                     >
-                      <span className="text-gray-600">{item.label}</span>
-                      <span className="shrink-0 font-medium text-gray-900">
+                      <span className="min-w-0 text-gray-600">{item.label}</span>
+                      <span className="shrink-0 text-right font-medium text-gray-900">
                         {item.price}
                       </span>
                     </li>
@@ -300,9 +300,9 @@ function Home() {
       </section>
 
       {/* ── How It Works ── */}
-      <section className="bg-white py-16 sm:py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section className="bg-white py-12 sm:py-24">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             How it works
           </h2>
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
@@ -322,9 +322,9 @@ function Home() {
       </section>
 
       {/* ── Quick Inquiry Form ── */}
-      <section id="request-form" className="bg-gray-50 py-16 sm:py-24">
-        <div className="mx-auto max-w-lg px-6">
-          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+      <section id="request-form" className="bg-gray-50 py-12 sm:py-24">
+        <div className="mx-auto max-w-lg px-4 sm:px-6">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Quick inquiry
           </h2>
           <p className="mt-3 text-center text-gray-500">
@@ -359,10 +359,11 @@ function Home() {
                   id="name"
                   name="name"
                   type="text"
+                  autoComplete="name"
                   required
                   value={formState.name}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 min-h-[48px] px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="Your full name"
                 />
               </div>
@@ -378,10 +379,12 @@ function Home() {
                   id="email"
                   name="email"
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   required
                   value={formState.email}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 min-h-[48px] px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="you@example.com"
                 />
               </div>
@@ -397,10 +400,12 @@ function Home() {
                   id="phone"
                   name="phone"
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   required
                   value={formState.phone}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 min-h-[48px] px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="(555) 123-4567"
                 />
               </div>
@@ -418,7 +423,7 @@ function Home() {
                   required
                   value={formState.serviceType}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 min-h-[48px] px-4 py-3 text-base text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                 >
                   <option value="" disabled>
                     Select a service…
@@ -449,7 +454,7 @@ function Home() {
                   required
                   value={formState.message}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="mt-1 block w-full rounded-lg border border-gray-300 min-h-[48px] px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
                   placeholder="Describe your project or issue…"
                 />
               </div>
@@ -457,7 +462,7 @@ function Home() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60"
+                className="min-h-[48px] w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60"
               >
                 {submitting ? "Sending…" : "Submit Request"}
               </button>
@@ -468,7 +473,7 @@ function Home() {
 
       {/* ── Contractor CTA Banner ── */}
       <section className="bg-white py-12 sm:py-16">
-        <div className="mx-auto max-w-3xl px-6">
+        <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <div className="rounded-2xl border border-indigo-200 bg-gradient-to-r from-indigo-50 to-blue-50 p-8 text-center sm:p-10">
             <h2 className="text-xl font-bold text-indigo-900 sm:text-2xl">
               Are you a home services professional?
@@ -478,7 +483,7 @@ function Home() {
             </p>
             <a
               href="/contractors"
-              className="mt-5 inline-block rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700"
+              className="mt-5 inline-flex min-h-[48px] items-center justify-center rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700"
             >
               Learn more for contractors
             </a>
@@ -487,7 +492,7 @@ function Home() {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="mt-auto bg-gray-900 py-10 text-center text-gray-400">
+      <footer className="mt-auto bg-gray-900 px-4 py-10 text-center text-gray-400">
         <p className="text-sm font-medium text-white">
           {businessName} — Serving homeowners across all of Tennessee
         </p>

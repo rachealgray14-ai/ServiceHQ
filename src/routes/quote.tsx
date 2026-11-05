@@ -377,11 +377,11 @@ function QuotePage() {
     <div className="min-h-dvh flex flex-col bg-gray-50">
       {/* ── Header ── */}
       <header className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-        <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-16">
           <a href="/" className="text-sm font-medium text-blue-100 hover:text-white">
             ← Back to ServiceHQ
           </a>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="mt-3 text-2xl font-bold tracking-tight sm:text-4xl">
             Get your instant quote
           </h1>
           <p className="mt-3 max-w-xl text-blue-100">
@@ -393,8 +393,15 @@ function QuotePage() {
 
       {/* ── Progress bar ── */}
       <div className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-3xl px-6 py-4">
-          <div className="flex items-center justify-between text-xs font-medium sm:text-sm">
+        <div className="mx-auto max-w-3xl px-4 py-4 sm:px-6">
+          {/* Phones: three labelled step chips don't fit in 360px, so show a
+              single compact line instead. */}
+          <div className="flex items-center justify-between sm:hidden">
+            <span className="text-sm font-semibold text-indigo-700">
+              Step {step} of {steps.length}: {steps[step - 1]}
+            </span>
+          </div>
+          <div className="hidden items-center justify-between text-xs font-medium sm:flex sm:text-sm">
             {steps.map((label, i) => {
               const n = i + 1;
               const active = step === n;
@@ -434,7 +441,7 @@ function QuotePage() {
       </div>
 
       {/* ── Body ── */}
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10 sm:py-14">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8 sm:px-6 sm:py-14">
         {/* Step 1: Category */}
         {step === 1 && (
           <div>
@@ -444,7 +451,7 @@ function QuotePage() {
             <p className="mt-2 text-sm text-gray-500">
               Choose the category that best fits your project.
             </p>
-            <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               {categories.map((c) => {
                 const selected = categoryId === c.id;
                 return (
@@ -452,7 +459,7 @@ function QuotePage() {
                     key={c.id}
                     type="button"
                     onClick={() => pickCategory(c.id)}
-                    className={`rounded-xl border p-4 text-left shadow-sm transition ${
+                    className={`min-h-[92px] rounded-xl border p-3.5 text-left shadow-sm transition sm:p-4 ${
                       selected
                         ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500"
                         : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md"
@@ -473,12 +480,12 @@ function QuotePage() {
                 );
               })}
             </div>
-            <div className="mt-10 flex justify-end">
+            <div className="mt-8 flex sm:mt-10 sm:justify-end">
               <button
                 type="button"
                 disabled={!categoryId}
                 onClick={() => setStep(2)}
-                className="rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[48px] w-full rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 Continue
               </button>
@@ -507,7 +514,7 @@ function QuotePage() {
                           key={opt.value}
                           type="button"
                           onClick={() => setAnswer(q.key, opt.value)}
-                          className={`rounded-lg border px-4 py-2.5 text-sm font-medium shadow-sm transition ${
+                          className={`min-h-[44px] rounded-lg border px-4 py-3 text-left text-sm font-medium shadow-sm transition ${
                             selected
                               ? "border-indigo-500 bg-indigo-50 text-indigo-900 ring-2 ring-indigo-500"
                               : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:shadow"
@@ -530,11 +537,11 @@ function QuotePage() {
                 </div>
               ))}
             </div>
-            <div className="mt-10 flex items-center justify-between">
+            <div className="mt-8 flex flex-col gap-3 sm:mt-10 sm:flex-row sm:items-center sm:justify-between">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                className="min-h-[48px] w-full rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 sm:w-auto"
               >
                 ← Back
               </button>
@@ -542,7 +549,7 @@ function QuotePage() {
                 type="button"
                 disabled={!allAnswered}
                 onClick={() => setStep(3)}
-                className="rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-h-[48px] w-full rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
                 See my estimate
               </button>
@@ -553,7 +560,7 @@ function QuotePage() {
         {/* Step 3: Estimate */}
         {step === 3 && category && estimate && (
           <div>
-            <div className="rounded-2xl border border-indigo-200 bg-white p-8 text-center shadow-sm sm:p-10">
+            <div className="rounded-2xl border border-indigo-200 bg-white p-6 text-center shadow-sm sm:p-10">
               <div className="text-5xl">{category.emoji}</div>
               <h2 className="mt-4 text-xl font-bold text-gray-900 sm:text-2xl">
                 Your estimated range
@@ -561,7 +568,7 @@ function QuotePage() {
               <p className="mt-1 text-sm text-gray-500">
                 {category.title} — {selectedLabels(category, answers)}
               </p>
-              <p className="mt-6 text-4xl font-bold tracking-tight text-indigo-700 sm:text-5xl">
+              <p className="mt-6 break-words text-3xl font-bold tracking-tight text-indigo-700 sm:text-5xl">
                 {fmt(estimate.low)}–{fmt(estimate.high)}
               </p>
               {estimate.notes.length > 0 && (
@@ -582,7 +589,7 @@ function QuotePage() {
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
               <a
                 href={`/book?service=${category.id}`}
-                className="inline-block rounded-lg bg-indigo-600 px-8 py-3 text-center font-semibold text-white shadow-md transition hover:bg-indigo-700"
+                className="flex min-h-[48px] items-center justify-center rounded-lg bg-indigo-600 px-8 py-3 text-center font-semibold text-white shadow-md transition hover:bg-indigo-700"
               >
                 Book This Service
               </a>
@@ -609,7 +616,7 @@ function QuotePage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="mt-auto bg-gray-900 py-10 text-center text-gray-400">
+      <footer className="mt-auto bg-gray-900 px-4 py-10 text-center text-gray-400">
         <p className="text-sm font-medium text-white">
           ServiceHQ — Serving homeowners across Tennessee
         </p>
