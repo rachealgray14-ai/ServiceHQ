@@ -97,11 +97,14 @@ function BookingConfirmedPage() {
   return (
     <div className="min-h-dvh flex flex-col bg-gray-50">
       <header className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-        <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-          <a href="/" className="text-sm font-medium text-blue-100 hover:text-white">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-16">
+          <a
+            href="/"
+            className="inline-flex min-h-[44px] items-center text-sm font-medium text-blue-100 hover:text-white"
+          >
             ← Back to ServiceHQ
           </a>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">
             Booking status
           </h1>
           <p className="mt-3 max-w-xl text-blue-100">
@@ -110,11 +113,11 @@ function BookingConfirmedPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-10 sm:py-14">
+      <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-6 sm:px-6 sm:py-14">
         {loading ? (
           <p className="text-center text-sm text-gray-400">Loading…</p>
         ) : notFound || !booking ? (
-          <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center shadow-sm">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm sm:p-10">
             <div className="text-4xl">🔎</div>
             <h2 className="mt-4 text-xl font-bold text-gray-900">Booking not found</h2>
             <p className="mt-2 text-sm text-gray-500">
@@ -122,16 +125,16 @@ function BookingConfirmedPage() {
             </p>
             <a
               href="/book"
-              className="mt-6 inline-block rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700"
+              className="mt-6 inline-flex min-h-[48px] items-center justify-center rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700"
             >
               Book a service
             </a>
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="rounded-2xl border border-green-200 bg-white p-8 text-center shadow-sm sm:p-10">
+            <div className="rounded-2xl border border-green-200 bg-white p-6 text-center shadow-sm sm:p-10">
               <div className="text-5xl">{booking.contractorId ? "🤝" : "✅"}</div>
-              <h2 className="mt-4 text-2xl font-bold text-gray-900">
+              <h2 className="mt-4 text-xl font-bold text-gray-900 sm:text-2xl">
                 Booking #{booking.requestId}
               </h2>
               {booking.contractorId ? (
@@ -153,10 +156,10 @@ function BookingConfirmedPage() {
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-100 px-6 py-4">
+              <div className="border-b border-gray-100 px-4 py-4 sm:px-6">
                 <h3 className="text-sm font-semibold text-gray-900">Service</h3>
               </div>
-              <dl className="divide-y divide-gray-50 px-6">
+              <dl className="divide-y divide-gray-50 px-4 sm:px-6">
                 <Row label="Service type" value={titleCase(booking.serviceType)} />
                 <Row label="Details" value={booking.message || "—"} />
                 {booking.scheduledAt && (
@@ -178,10 +181,10 @@ function BookingConfirmedPage() {
             </div>
 
             <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-              <div className="border-b border-gray-100 px-6 py-4">
+              <div className="border-b border-gray-100 px-4 py-4 sm:px-6">
                 <h3 className="text-sm font-semibold text-gray-900">Your details</h3>
               </div>
-              <dl className="divide-y divide-gray-50 px-6">
+              <dl className="divide-y divide-gray-50 px-4 sm:px-6">
                 <Row label="Name" value={booking.name} />
                 <Row label="Email" value={booking.email} />
                 <Row label="Phone" value={booking.phone} />
@@ -202,7 +205,7 @@ function BookingConfirmedPage() {
             <div className="flex justify-center">
               <a
                 href="/"
-                className="inline-block rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700"
+                className="inline-flex min-h-[48px] items-center justify-center rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700"
               >
                 Back to home
               </a>
@@ -211,7 +214,7 @@ function BookingConfirmedPage() {
         )}
       </main>
 
-      <footer className="mt-auto bg-gray-900 py-10 text-center text-gray-400">
+      <footer className="mt-auto bg-gray-900 px-4 py-10 text-center text-gray-400">
         <p className="text-sm font-medium text-white">
           ServiceHQ — Serving homeowners across Tennessee
         </p>
@@ -225,7 +228,9 @@ function Row({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex flex-col gap-1 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
       <dt className="shrink-0 text-sm font-medium text-gray-500">{label}</dt>
-      <dd className="text-right text-sm font-semibold text-gray-900">{value}</dd>
+      <dd className="text-left text-sm font-semibold break-words text-gray-900 sm:text-right">
+        {value}
+      </dd>
     </div>
   );
 }

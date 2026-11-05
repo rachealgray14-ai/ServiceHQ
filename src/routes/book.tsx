@@ -377,8 +377,24 @@ function selectedLabels(category: Category, answers: Record<string, string>): st
 }
 
 function inputCls(): string {
-  return "mt-1 block w-full rounded-lg border border-gray-300 px-4 py-2.5 text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none";
+  // 16px text keeps iOS from zooming the page when a field is focused, and
+  // min-h-[48px] gives every input a comfortable thumb target.
+  return "mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none";
 }
+
+/* Mobile action bar: on phones the step's primary action is pinned to the
+ * bottom of the screen so it stays under the thumb; from `sm` up it sits in
+ * normal flow at the end of the step, exactly as before. The bar is the last
+ * element of the step, so it never covers the footer, and everything above it
+ * can still be scrolled into view. */
+const ACTION_BAR =
+  "sticky bottom-0 z-20 -mx-4 mt-8 flex items-stretch gap-3 border-t border-gray-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:mt-10 sm:border-0 sm:bg-transparent sm:p-0";
+const BTN_PRIMARY =
+  "min-h-[48px] flex-1 rounded-lg bg-indigo-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:px-8";
+const BTN_SUBMIT =
+  "min-h-[48px] flex-1 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:px-10";
+const BTN_BACK =
+  "min-h-[48px] shrink-0 rounded-lg border border-gray-300 bg-white px-5 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 sm:px-6";
 
 function BookPage() {
   const search = Route.useSearch() as { service?: string };
@@ -467,14 +483,17 @@ function BookPage() {
     <div className="min-h-dvh flex flex-col bg-gray-50">
       {/* ── Header ── */}
       <header className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
-        <div className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
-          <a href="/" className="text-sm font-medium text-blue-100 hover:text-white">
+        <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-16">
+          <a
+            href="/"
+            className="inline-flex min-h-[44px] items-center text-sm font-medium text-blue-100 hover:text-white"
+          >
             ← Back to ServiceHQ
           </a>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+          <h1 className="text-2xl font-bold tracking-tight sm:text-4xl">
             Book a service
           </h1>
-          <p className="mt-3 max-w-xl text-blue-100">
+          <p className="mt-2 max-w-xl text-sm text-blue-100 sm:mt-3 sm:text-base">
             Tell us what you need, pick a time, and we'll match you with a vetted
             local pro — anywhere in Tennessee.
           </p>
@@ -483,7 +502,7 @@ function BookPage() {
 
       {/* ── Progress steps ── */}
       <div className="border-b border-gray-200 bg-white">
-        <div className="mx-auto max-w-3xl px-6 py-4">
+        <div className="mx-auto max-w-3xl px-4 py-3 sm:px-6 sm:py-4">
           <div className="hidden items-center justify-between text-xs font-medium sm:flex sm:text-sm">
             {STEPS.map((label, i) => {
               const n = i + 1;
@@ -513,7 +532,7 @@ function BookPage() {
             })}
           </div>
           <div className="flex items-center justify-between sm:hidden">
-            <span className="text-sm font-semibold text-indigo-700">
+            <span className="truncate text-sm font-semibold text-indigo-700">
               Step {Math.min(step, 5)} of {STEPS.length}: {STEPS[Math.min(step, 5) - 1]}
             </span>
           </div>
@@ -527,7 +546,7 @@ function BookPage() {
       </div>
 
       {/* ── Body ── */}
-      <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10 sm:py-14">
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6 sm:py-14">
         {/* Step 1: Service selection */}
         {step === 1 && (
           <div>
@@ -537,7 +556,7 @@ function BookPage() {
             <p className="mt-2 text-sm text-gray-500">
               Choose the category that best fits your project.
             </p>
-            <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-3">
+            <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 lg:grid-cols-3">
               {CATEGORIES.map((c) => {
                 const selected = categoryId === c.id;
                 return (
@@ -548,7 +567,7 @@ function BookPage() {
                       setCategoryId(c.id);
                       setAnswers({});
                     }}
-                    className={`rounded-xl border p-4 text-left shadow-sm transition ${
+                    className={`min-h-[92px] rounded-xl border p-3.5 text-left shadow-sm transition sm:p-4 ${
                       selected
                         ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500"
                         : "border-gray-200 bg-white hover:border-indigo-300 hover:shadow-md"
@@ -569,12 +588,12 @@ function BookPage() {
                 );
               })}
             </div>
-            <div className="mt-10 flex justify-end">
+            <div className={`${ACTION_BAR} justify-end`}>
               <button
                 type="button"
                 disabled={!categoryId}
                 onClick={() => setStep(2)}
-                className="rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className={BTN_PRIMARY}
               >
                 Continue →
               </button>
@@ -603,7 +622,7 @@ function BookPage() {
                             key={opt.value}
                             type="button"
                             onClick={() => setAnswer(q.key, opt.value)}
-                            className={`rounded-lg border px-4 py-2.5 text-sm font-medium shadow-sm transition ${
+                            className={`min-h-[44px] rounded-lg border px-4 py-3 text-left text-sm font-medium shadow-sm transition ${
                               selected
                                 ? "border-indigo-500 bg-indigo-50 text-indigo-900 ring-2 ring-indigo-500"
                                 : "border-gray-200 bg-white text-gray-700 hover:border-indigo-300 hover:shadow"
@@ -634,19 +653,15 @@ function BookPage() {
               />
             </div>
 
-            <div className="mt-10 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setStep(1)}
-                className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
-              >
+            <div className={ACTION_BAR}>
+              <button type="button" onClick={() => setStep(1)} className={BTN_BACK}>
                 ← Back
               </button>
               <button
                 type="button"
                 disabled={!detailsComplete}
                 onClick={() => setStep(3)}
-                className="rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className={BTN_PRIMARY}
               >
                 Continue →
               </button>
@@ -674,7 +689,7 @@ function BookPage() {
                       key={key}
                       type="button"
                       onClick={() => setDateKey(key)}
-                      className={`flex flex-col items-center rounded-lg border py-3 shadow-sm transition ${
+                      className={`flex min-h-[64px] flex-col items-center justify-center rounded-lg border py-2.5 shadow-sm transition sm:py-3 ${
                         selected
                           ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500"
                           : "border-gray-200 bg-white hover:border-indigo-300"
@@ -695,7 +710,7 @@ function BookPage() {
 
             <div className="mt-8">
               <h3 className="text-sm font-semibold text-gray-900">Preferred time window</h3>
-              <div className="mt-3 flex flex-wrap gap-3">
+              <div className="mt-3 flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-3">
                 {TIME_WINDOWS.map((w) => {
                   const selected = window === w.value;
                   return (
@@ -703,7 +718,7 @@ function BookPage() {
                       key={w.value}
                       type="button"
                       onClick={() => setWindow(w.value)}
-                      className={`rounded-lg border px-5 py-3 text-left shadow-sm transition ${
+                      className={`min-h-[56px] w-full rounded-lg border px-4 py-3 text-left shadow-sm transition sm:w-auto sm:px-5 ${
                         selected
                           ? "border-indigo-500 bg-indigo-50 ring-2 ring-indigo-500"
                           : "border-gray-200 bg-white hover:border-indigo-300"
@@ -725,19 +740,15 @@ function BookPage() {
               </p>
             </div>
 
-            <div className="mt-10 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
-              >
+            <div className={ACTION_BAR}>
+              <button type="button" onClick={() => setStep(2)} className={BTN_BACK}>
                 ← Back
               </button>
               <button
                 type="button"
                 disabled={!dateKey || !window}
                 onClick={() => setStep(4)}
-                className="rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className={BTN_PRIMARY}
               >
                 Continue →
               </button>
@@ -770,6 +781,7 @@ function BookPage() {
                     id="name"
                     name="name"
                     type="text"
+                    autoComplete="name"
                     required
                     value={contact.name}
                     onChange={handleContact}
@@ -785,6 +797,8 @@ function BookPage() {
                     id="email"
                     name="email"
                     type="email"
+                    inputMode="email"
+                    autoComplete="email"
                     required
                     value={contact.email}
                     onChange={handleContact}
@@ -801,6 +815,8 @@ function BookPage() {
                   id="phone"
                   name="phone"
                   type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   required
                   value={contact.phone}
                   onChange={handleContact}
@@ -816,6 +832,7 @@ function BookPage() {
                   id="address"
                   name="address"
                   type="text"
+                  autoComplete="street-address"
                   required
                   value={contact.address}
                   onChange={handleContact}
@@ -832,6 +849,7 @@ function BookPage() {
                     id="city"
                     name="city"
                     type="text"
+                    autoComplete="address-level2"
                     required
                     value={contact.city}
                     onChange={handleContact}
@@ -862,19 +880,11 @@ function BookPage() {
                   </select>
                 </div>
               </div>
-              <div className="flex items-center justify-between pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(3)}
-                  className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
-                >
+              <div className={ACTION_BAR}>
+                <button type="button" onClick={() => setStep(3)} className={BTN_BACK}>
                   ← Back
                 </button>
-                <button
-                  type="submit"
-                  disabled={!contactComplete}
-                  className="rounded-lg bg-indigo-600 px-8 py-3 font-semibold text-white shadow-md transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
+                <button type="submit" disabled={!contactComplete} className={BTN_PRIMARY}>
                   Continue →
                 </button>
               </div>
@@ -916,42 +926,38 @@ function BookPage() {
               </div>
             )}
 
-            <div className="mt-10 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <button
-                type="button"
-                onClick={() => setStep(4)}
-                className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
-              >
+            <p className="mt-6 text-center text-xs text-gray-400">
+              By booking you agree to be matched with a vetted local professional.
+              No payment is taken today.
+            </p>
+            <div className={ACTION_BAR}>
+              <button type="button" onClick={() => setStep(4)} className={BTN_BACK}>
                 ← Back
               </button>
               <button
                 type="button"
                 disabled={submitting}
                 onClick={handleSubmit}
-                className="rounded-lg bg-blue-600 px-10 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className={BTN_SUBMIT}
               >
                 {submitting ? "Booking…" : "Book Now"}
               </button>
             </div>
-            <p className="mt-4 text-center text-xs text-gray-400">
-              By booking you agree to be matched with a vetted local professional.
-              No payment is taken today.
-            </p>
           </div>
         )}
 
         {/* Step 6: Confirmation */}
         {step === 6 && result && (
           <div>
-            <div className="rounded-2xl border border-green-200 bg-white p-8 text-center shadow-sm sm:p-10">
+            <div className="rounded-2xl border border-green-200 bg-white p-6 text-center shadow-sm sm:p-10">
               <div className="text-5xl">🎉</div>
-              <h2 className="mt-4 text-2xl font-bold text-gray-900">
+              <h2 className="mt-4 text-xl font-bold text-gray-900 sm:text-2xl">
                 Booking received!
               </h2>
               <p className="mt-2 text-sm text-gray-500">
                 Your booking reference is
               </p>
-              <p className="mt-3 inline-block rounded-lg bg-indigo-50 px-6 py-3 font-mono text-2xl font-bold tracking-wider text-indigo-700">
+              <p className="mt-3 inline-block max-w-full break-all rounded-lg bg-indigo-50 px-5 py-3 font-mono text-xl font-bold tracking-wider text-indigo-700 sm:px-6 sm:text-2xl">
                 #{result.requestId}
               </p>
               <p className="mt-6 text-sm text-gray-600">
@@ -960,13 +966,13 @@ function BookPage() {
               <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <a
                   href={`/booking-confirmed?id=${result.requestId}`}
-                  className="inline-block rounded-lg bg-indigo-600 px-8 py-3 text-center font-semibold text-white shadow-md transition hover:bg-indigo-700"
+                  className="flex min-h-[48px] items-center justify-center rounded-lg bg-indigo-600 px-8 py-3 text-center font-semibold text-white shadow-md transition hover:bg-indigo-700"
                 >
                   Track this booking
                 </a>
                 <a
                   href="/"
-                  className="inline-block rounded-lg border border-gray-300 bg-white px-8 py-3 text-center font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+                  className="flex min-h-[48px] items-center justify-center rounded-lg border border-gray-300 bg-white px-8 py-3 text-center font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
                 >
                   Back to home
                 </a>
@@ -977,7 +983,7 @@ function BookPage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="mt-auto bg-gray-900 py-10 text-center text-gray-400">
+      <footer className="mt-auto bg-gray-900 px-4 py-10 text-center text-gray-400">
         <p className="text-sm font-medium text-white">
           ServiceHQ — Serving homeowners across Tennessee
         </p>
@@ -998,12 +1004,14 @@ function ReviewRow({
 }) {
   return (
     <div
-      className={`flex items-start justify-between gap-4 rounded-xl border bg-white px-5 py-4 ${
+      className={`flex flex-col gap-1 rounded-xl border bg-white px-4 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-5 sm:py-4 ${
         last ? "border-indigo-100" : "border-gray-200"
       }`}
     >
       <span className="text-sm font-medium text-gray-500">{label}</span>
-      <span className="text-right text-sm font-semibold text-gray-900">{value}</span>
+      <span className="text-left text-sm font-semibold break-words text-gray-900 sm:text-right">
+        {value}
+      </span>
     </div>
   );
 }
