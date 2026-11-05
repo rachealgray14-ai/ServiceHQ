@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { ensureDatabaseSchema } from "../db/schema";
 import { sql } from "../db";
+import { findContractorForRequest } from "../lib/matching";
 
 /* ──────────────────────────────────────────────────────────────
  * Server-side: create a booking (customer => service_request => job)
@@ -49,6 +50,24 @@ const createBooking = createServerFn({ method: "POST" }).handler(
       INSERT INTO jobs (service_request_id, customer_id, status, scheduled_at)
       VALUES (${req.id}, ${customerId}, 'pending', ${data.scheduledAt}::timestamptz)
       RETURNING id`;
+
+    // Route the job: find a vetted contractor for this service type in the
+    // customer's county (this booking's county, not the stored customer row,
+    // which can be stale for returning customers) and assign them.
+    // Neon serverless has no multi-statement transaction here, so we keep the
+    // plain sequential `await q`...`` style. If nothing matches, the job simply
+    // stays unassigned and the request at 'new' — the booking still succeeds.
+    const contractorId = await findContractorForRequest({
+      serviceType: data.serviceType,
+      tnCounty: data.tnCounty,
+      q,
+    });
+    if (contractorId != null) {
+      await q`UPDATE jobs SET contractor_id = ${contractorId}, updated_at = NOW()
+              WHERE id = ${job.id}`;
+      await q`UPDATE service_requests SET status = 'assigned', updated_at = NOW()
+              WHERE id = ${req.id}`;
+    }
 
     return { requestId: req.id as number, jobId: job.id as number };
   },
