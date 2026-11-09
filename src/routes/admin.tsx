@@ -616,6 +616,16 @@ function fmtDate(v: string | null): string {
   });
 }
 
+/** Coverage label for the contractors list: "Statewide" or the counties served. */
+function countiesLabel(counties: string[] | null | undefined): string {
+  const list = (counties ?? []).filter(
+    (c) => typeof c === "string" && c.trim() !== "",
+  );
+  if (list.length === 0) return "Statewide";
+  if (list.length <= 3) return list.join(", ");
+  return `${list.slice(0, 3).join(", ")} +${list.length - 3}`;
+}
+
 function TitleCase(v: string | null): string {
   if (!v) return "—";
   return v
@@ -1580,7 +1590,19 @@ function ContractorsSection({ password }: { password: string }) {
                     <span className="block text-xs text-gray-400">{c.email}</span>
                   </td>
                   <td className="px-3 py-2.5 text-gray-700">{c.company_name ?? "—"}</td>
-                  <td className="px-3 py-2.5 text-gray-600">{TitleCase(c.service_type)}</td>
+                  <td className="px-3 py-2.5 text-gray-600">
+                    {TitleCase(c.service_type)}
+                    <span
+                      className="block text-xs text-gray-400"
+                      title={
+                        c.tn_counties.length > 0
+                          ? `Serves: ${c.tn_counties.join(", ")}`
+                          : "Serves all of Tennessee"
+                      }
+                    >
+                      {countiesLabel(c.tn_counties)}
+                    </span>
+                  </td>
                   <td className="px-3 py-2.5">
                     <Badge value={c.status} colors={CONTRACTOR_STATUS_COLORS} />
                   </td>
