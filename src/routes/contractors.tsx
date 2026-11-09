@@ -1,29 +1,110 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ensureDatabaseSchema } from "../db/schema";
 import { sql } from "../db";
+import {
+  TN_COUNTIES,
+  normalizeCountyList,
+  toPgTextArray,
+} from "../lib/tn-counties";
 
-// Handle contractor applications in Postgres.
+/* ──────────────────────────────────────────────────────────────
+ * Server-side: store a contractor application.
+ *
+ * `tn_counties` is required input, not a default: routing treats an empty
+ * array as "serves all of Tennessee", so an application that never says where
+ * it works must be rejected here rather than silently becoming statewide.
+ * ────────────────────────────────────────────────────────────── */
+
+type ApplicationInput = {
+  name: string;
+  companyName: string;
+  email: string;
+  phone: string;
+  serviceType: string;
+  yearsExperience: string;
+  licenseNumber: string;
+  /** Counties the applicant ticked. Ignored when `servesStatewide` is true. */
+  tnCounties: string[];
+  /** "I serve all of Tennessee" — stored as an empty `tn_counties` array. */
+  servesStatewide: boolean;
+};
+
 const submitContractorApplication = createServerFn({ method: "POST" })
-  .handler(async (data: {
-    name: string;
-    companyName: string;
-    email: string;
-    phone: string;
-    serviceType: string;
-    yearsExperience: string;
-    licenseNumber: string;
-  }) => {
+  // Declares the payload type for the caller; `readApplication` below is what
+  // actually validates and normalizes it on the server.
+  .validator((input: unknown) => input as ApplicationInput)
+  .handler(async ({ data }) => {
+    // TanStack passes the caller's payload as `ctx.data`, so read it defensively
+    // rather than trusting its shape.
+    const input = readApplication(data);
+    if (!input) {
+      return {
+        success: false,
+        error: "We couldn't read that application. Please reload the page and try again.",
+        counties: [] as string[],
+        servesStatewide: false,
+      };
+    }
+    const counties = input.servesStatewide
+      ? []
+      : normalizeCountyList(input.tnCounties);
+    if (!input.servesStatewide && counties.length === 0) {
+      return {
+        success: false,
+        error:
+          "Choose at least one county you serve, or tick “I serve all of Tennessee”.",
+        counties: [] as string[],
+        servesStatewide: false,
+      };
+    }
+    if (
+      !input.name ||
+      !input.companyName ||
+      !input.email ||
+      !input.phone ||
+      !input.serviceType
+    ) {
+      return {
+        success: false,
+        error: "Please fill in your name, company, email, phone and service type.",
+        counties: [] as string[],
+        servesStatewide: input.servesStatewide,
+      };
+    }
     await ensureDatabaseSchema();
     await sql()`INSERT INTO contractors
-      (name, company_name, email, phone, service_type, years_experience, license_number)
-      VALUES (${data.name}, ${data.companyName}, ${data.email}, ${data.phone}, ${data.serviceType}, ${parseExperience(data.yearsExperience)}, ${data.licenseNumber})`;
-    return { success: true };
+      (name, company_name, email, phone, service_type, years_experience, license_number, tn_counties)
+      VALUES (${input.name}, ${input.companyName}, ${input.email}, ${input.phone}, ${input.serviceType}, ${parseExperience(input.yearsExperience)}, ${input.licenseNumber}, ${toPgTextArray(counties)}::text[])`;
+    return {
+      success: true,
+      error: "",
+      counties: counties as string[],
+      servesStatewide: input.servesStatewide,
+    };
   });
 
+/** Coerce the incoming payload to the shape the insert expects. */
+function readApplication(raw: unknown): ApplicationInput | null {
+  if (!raw || typeof raw !== "object") return null;
+  const v = raw as Record<string, unknown>;
+  const str = (x: unknown) => (typeof x === "string" ? x.trim() : "");
+  return {
+    name: str(v.name),
+    companyName: str(v.companyName),
+    email: str(v.email),
+    phone: str(v.phone),
+    serviceType: str(v.serviceType),
+    yearsExperience: str(v.yearsExperience),
+    licenseNumber: str(v.licenseNumber),
+    tnCounties: Array.isArray(v.tnCounties) ? v.tnCounties.map(String) : [],
+    servesStatewide: v.servesStatewide === true,
+  };
+}
+
 function parseExperience(value: string): number | null {
-  const match = value.match(/\\d+/);
+  const match = value.match(/\d+/);
   return match ? Number(match[0]) : null;
 }
 
@@ -31,34 +112,46 @@ export const Route = createFileRoute("/contractors")({
   component: Contractors,
 });
 
+/* ── Copy ──
+ * Every claim below is something ServiceHQ can do today: route bookings to
+ * contractors by service type and county, and review applications by hand.
+ * There is no payment integration, no contractor portal, no messaging and no
+ * review system — so none of those are mentioned.
+ */
+
 const benefits = [
   {
-    emoji: "📋",
-    title: "Steady stream of jobs",
+    emoji: "🎉",
+    title: "Founding rate: 10% commission",
     description:
-      "We connect you with homeowners actively looking for your services — so you spend less time hunting for work.",
+      "The first ten contractors on ServiceHQ pay a 10% commission on completed jobs. After that, the standard rate is 15–20%. Joining is free — no sign-up fees, no monthly dues.",
   },
   {
-    emoji: "💰",
-    title: "Fair, transparent pay",
+    emoji: "🌿",
+    title: "Lawn care in Davidson County first",
     description:
-      "You set your own rates within platform guidelines, and you keep 80–85% of every completed job.",
+      "We're signing up lawn-care pros in Nashville / Davidson County first. Contractors elsewhere in Tennessee are welcome to apply — we'll onboard as we expand.",
   },
   {
-    emoji: "📱",
-    title: "We handle the admin",
+    emoji: "📍",
+    title: "Jobs come to you by county",
     description:
-      "Scheduling, payments, and customer communication run through the platform — you focus on the work.",
+      "New bookings are routed to contractors who do that service in the booking's county. You tell us which counties you cover, and we only send you work there.",
   },
   {
-    emoji: "🕐",
-    title: "Be your own boss",
+    emoji: "💵",
+    title: "You set your own rates",
     description:
-      "Accept or decline jobs on your schedule. No shift requirements, no minimum hours.",
+      "You price your own work within ServiceHQ's platform guidelines. We don't set your rates for you.",
   },
 ];
 
 const jobTypes = [
+  {
+    emoji: "🌿",
+    title: "Lawn Care",
+    description: "Mowing, landscaping, seasonal cleanup, and fertilization treatments.",
+  },
   {
     emoji: "🔧",
     title: "Repairs",
@@ -68,11 +161,6 @@ const jobTypes = [
     emoji: "🧹",
     title: "Cleaning",
     description: "Standard, deep, and move-in/move-out cleaning for homes of all sizes.",
-  },
-  {
-    emoji: "🌿",
-    title: "Lawn Care",
-    description: "Mowing, landscaping, seasonal cleanup, and fertilization treatments.",
   },
   {
     emoji: "🏠",
@@ -104,44 +192,82 @@ const jobTypes = [
 const requirements = [
   "Valid Tennessee business license",
   "Liability insurance ($500k+)",
-  "Background check",
   "2+ years professional experience",
-  "Reliable transportation",
-  "Own tools and equipment",
-  "Smartphone for the ServiceHQ app",
+  "Reliable transportation and your own tools",
+  "Willing to complete a background check",
 ];
 
-const onboardingSteps = [
-  { step: 1, title: "Submit application", description: "Fill out the form below with your details and service area." },
-  { step: 2, title: "License & insurance verification", description: "We verify your credentials — typically 2–3 business days." },
-  { step: 3, title: "Background check", description: "Standard background screening for the safety of our homeowners." },
-  { step: 4, title: "Skills assessment / interview", description: "A brief phone or video call to review your experience and expertise." },
-  { step: 5, title: "Platform orientation", description: "Walk through the ServiceHQ app, scheduling, and payment process." },
-  { step: 6, title: "Start receiving jobs", description: "Your profile goes live and homeowners in your area can book you." },
+/** Honest, capability-free version of "what happens next". */
+const nextSteps = [
+  {
+    step: 1,
+    title: "We review your application",
+    description:
+      "A person at ServiceHQ reads every application — it isn't auto-approved.",
+  },
+  {
+    step: 2,
+    title: "We check your license and insurance",
+    description:
+      "We look up the Tennessee business license number you give us and confirm your liability coverage.",
+  },
+  {
+    step: 3,
+    title: "We contact you directly",
+    description:
+      "We reach out by phone or email to talk through your experience and answer your questions.",
+  },
+  {
+    step: 4,
+    title: "We start routing jobs to you",
+    description:
+      "Once you're approved, new bookings for your service in the counties you picked are routed to you. There's no contractor portal yet, so we confirm the details of each job with you directly.",
+  },
 ];
 
 const faqs = [
   {
     q: "How much does it cost to join?",
-    a: "Joining ServiceHQ is completely free. There are no sign-up fees, monthly dues, or listing charges. We only earn when you earn — a 15–20% service fee per completed job.",
+    a: "Joining is free — no sign-up fees, no monthly dues, no listing charges. We earn a commission on completed jobs only: 10% for the first ten contractors on ServiceHQ, then the standard 15–20%.",
+  },
+  {
+    q: "Where are you recruiting right now?",
+    a: "Lawn care in Davidson County (Nashville) is our active focus, so that's where jobs will come first. If you work in another county or another service, apply anyway — your application goes on file and we onboard as we expand.",
   },
   {
     q: "How quickly will I get jobs?",
-    a: "Job volume varies by demand in your service area and your chosen categories. Some contractors receive their first booking within days; others may take a couple of weeks. We're actively marketing to homeowners across Tennessee.",
+    a: "That depends on homeowner demand in your county and service. We can't promise a timeline. In Davidson County lawn care we're recruiting and building demand now; elsewhere it will grow as we expand.",
   },
   {
-    q: "Can I set my own schedule?",
-    a: "Absolutely. You choose which jobs to accept or decline. There are no minimum hours, no shift requirements — you're in full control of your calendar.",
-  },
-  {
-    q: "What if there's a dispute with a homeowner?",
-    a: "ServiceHQ provides mediation for any disputes. We review the job details, communicate with both parties, and work toward a fair resolution. Our goal is protecting both homeowners and contractors.",
+    q: "Can I choose which jobs I take?",
+    a: "There's no contractor portal yet, so you won't be clicking accept or decline in an app. We contact you about a job before it's assigned, and we'll only send you work in the counties and service you applied for.",
   },
   {
     q: "Do I need my own insurance?",
-    a: "Yes. All contractors must carry at least $500k in general liability insurance. This protects both you and the homeowners you serve. We verify coverage during onboarding.",
+    a: "Yes. All contractors must carry at least $500k in general liability insurance. This protects both you and the homeowners you serve, and we check coverage as part of the application review.",
+  },
+  {
+    q: "What if something goes wrong on a job?",
+    a: "Tell us. We keep a record of every job and dispute, review what happened with both sides, and work toward a fair resolution.",
   },
 ];
+
+/** City nicknames that make the county search forgiving ("Nashville" → Davidson). */
+const CITY_TO_COUNTY: Record<string, string> = {
+  nashville: "Davidson",
+  memphis: "Shelby",
+  knoxville: "Knox",
+  chattanooga: "Hamilton",
+  clarksville: "Montgomery",
+  murfreesboro: "Rutherford",
+  franklin: "Williamson",
+};
+
+const INPUT_CLS =
+  "mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none";
+const LABEL_CLS = "block text-sm font-medium text-gray-700";
+const CHECKBOX_CLS =
+  "h-5 w-5 shrink-0 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500";
 
 function Contractors() {
   const [formState, setFormState] = useState({
@@ -153,25 +279,70 @@ function Contractors() {
     yearsExperience: "",
     licenseNumber: "",
   });
-  const [submitted, setSubmitted] = useState(false);
+  const [counties, setCounties] = useState<string[]>([]);
+  const [statewide, setStatewide] = useState(false);
+  const [countySearch, setCountySearch] = useState("");
+  const [showAllCounties, setShowAllCounties] = useState(false);
+  const [submitted, setSubmitted] = useState<{
+    counties: string[];
+    servesStatewide: boolean;
+  } | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  const coverageChosen = statewide || counties.length > 0;
+
+  const visibleCounties = useMemo(() => {
+    const query = countySearch.trim().toLowerCase();
+    if (!query) return showAllCounties ? [...TN_COUNTIES] : [];
+    const alias = Object.keys(CITY_TO_COUNTY).find((city) => city.includes(query));
+    const aliasCounty = alias ? CITY_TO_COUNTY[alias] : null;
+    return TN_COUNTIES.filter(
+      (c) => c.toLowerCase().includes(query) || c === aliasCounty,
+    );
+  }, [countySearch, showAllCounties]);
+
+  const toggleCounty = (county: string) => {
+    setCounties((prev) =>
+      prev.includes(county) ? prev.filter((c) => c !== county) : [...prev, county],
+    );
+    setSubmitError("");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!coverageChosen) {
+      setSubmitError(
+        "Choose at least one county you serve, or tick “I serve all of Tennessee”.",
+      );
+      return;
+    }
     setSubmitting(true);
+    setSubmitError("");
     try {
-      await submitContractorApplication(formState);
-      setSubmitted(true);
+      const result = await submitContractorApplication({
+        data: { ...formState, tnCounties: counties, servesStatewide: statewide },
+      });
+      if (result && result.success === false) {
+        setSubmitError(result.error);
+        return;
+      }
+      setSubmitted({
+        counties: result?.counties ?? counties,
+        servesStatewide: result?.servesStatewide ?? statewide,
+      });
     } catch {
-      // Silently handle — submission is best-effort
+      setSubmitError(
+        "Something went wrong saving your application. Please try again, or call us if it keeps failing.",
+      );
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     setFormState((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
@@ -181,12 +352,16 @@ function Contractors() {
       {/* ── Header ── */}
       <header className="bg-gradient-to-br from-blue-600 to-indigo-700 text-white">
         <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6 sm:py-20 lg:py-28">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+          <p className="inline-flex rounded-full bg-white/15 px-3 py-1 text-sm font-medium text-white">
+            Founding rate: first ten contractors pay 10% commission
+          </p>
+          <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             Grow your business with ServiceHQ
           </h1>
           <p className="mt-4 max-w-2xl text-base text-blue-100 sm:text-lg lg:text-xl">
-            Join Tennessee's statewide home-services platform and connect with
-            homeowners who need your skills.
+            ServiceHQ connects Tennessee homeowners with vetted local
+            contractors. We're signing up lawn-care pros in Nashville / Davidson
+            County first — contractors across Tennessee can apply now.
           </p>
           <a
             href="#contractor-form"
@@ -220,50 +395,30 @@ function Contractors() {
         </div>
       </section>
 
-      {/* ── How You Get Paid ── */}
+      {/* ── What happens next ── */}
       <section className="bg-gray-50 py-12 sm:py-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
           <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            How you get paid
+            What happens next
           </h2>
-          <div className="mt-8 space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm sm:mt-10 sm:p-8">
-            <div className="flex items-start gap-4">
-              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
-                1
+          <p className="mt-3 text-center text-gray-500">
+            From application to your first job — here's the whole process.
+          </p>
+          <div className="mt-8 space-y-4 sm:mt-10">
+            {nextSteps.map((s) => (
+              <div
+                key={s.step}
+                className="flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+              >
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
+                  {s.step}
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">{s.title}</h3>
+                  <p className="mt-0.5 text-sm text-gray-500">{s.description}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Set your rates</h3>
-                <p className="text-sm text-gray-500">
-                  You set your own pricing within our platform guidelines. We
-                  provide rate recommendations based on your market.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Complete the job</h3>
-                <p className="text-sm text-gray-500">
-                  The homeowner pays through the platform when the job is done.
-                  ServiceHQ deducts a 15–20% service fee; you keep 80–85%.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4">
-              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-sm font-bold text-indigo-700">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-900">Fast payout</h3>
-                <p className="text-sm text-gray-500">
-                  Payments are processed within 48 hours of job completion.
-                  Direct deposit to your bank account — no waiting, no chasing
-                  invoices.
-                </p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -272,8 +427,12 @@ function Contractors() {
       <section className="bg-white py-12 sm:py-24">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Types of jobs you'll receive
+            Services on ServiceHQ
           </h2>
+          <p className="mt-3 text-center text-gray-500">
+            Lawn care is where we're actively recruiting. Applications are open
+            for every category.
+          </p>
           <div className="mt-8 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4">
             {jobTypes.map((j) => (
               <div
@@ -310,63 +469,55 @@ function Contractors() {
         </div>
       </section>
 
-      {/* ── Vetting & Onboarding ── */}
-      <section className="bg-white py-12 sm:py-24">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-            Vetting &amp; onboarding
-          </h2>
-          <p className="mt-3 text-center text-gray-500">
-            From application to your first job — here's what to expect.
-          </p>
-          <div className="mt-10 space-y-4">
-            {onboardingSteps.map((s) => (
-              <div
-                key={s.step}
-                className="flex items-start gap-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-lg font-bold text-white">
-                  {s.step}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">{s.title}</h3>
-                  <p className="mt-0.5 text-sm text-gray-500">{s.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── CTA / Application Form ── */}
-      <section id="contractor-form" className="bg-gray-50 py-12 sm:py-24">
+      <section id="contractor-form" className="bg-white py-12 sm:py-24">
         <div className="mx-auto max-w-lg px-4 sm:px-6">
           <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 sm:text-4xl">
             Ready to join?
           </h2>
           <p className="mt-3 text-center text-gray-500">
-            Fill out the form below and we'll be in touch to start your
-            onboarding.
+            Fill out the form below and we'll review it and get in touch.
           </p>
 
           {submitted ? (
-            <div className="mt-10 rounded-xl border border-green-200 bg-green-50 p-8 text-center">
+            <div className="mt-10 rounded-xl border border-green-200 bg-green-50 p-6 text-center sm:p-8">
               <div className="text-4xl">✅</div>
               <h3 className="mt-4 text-xl font-semibold text-green-800">
-                Application received!
+                Application received
               </h3>
-              <p className="mt-2 text-green-600">
-                Thanks for your interest in joining ServiceHQ. We'll review your
-                application and reach out within 2–3 business days.
+              <p className="mt-2 text-green-700">
+                Thanks{formState.name ? `, ${formState.name.split(" ")[0]}` : ""} —
+                your application is with us.{" "}
+                {submitted.servesStatewide
+                  ? "You told us you serve all of Tennessee."
+                  : `You told us you serve ${
+                      submitted.counties.length === 1
+                        ? `${submitted.counties[0]} County`
+                        : `${submitted.counties.length} counties (${submitted.counties.join(", ")})`
+                    }.`}
               </p>
+              <div className="mt-5 rounded-lg bg-white/70 p-4 text-left">
+                <h4 className="text-sm font-semibold text-green-900">
+                  What happens next
+                </h4>
+                <ul className="mt-2 space-y-1.5 text-sm text-green-800">
+                  <li>We review your application by hand.</li>
+                  <li>We check your Tennessee license and insurance.</li>
+                  <li>
+                    We contact you directly by phone or email to talk through your
+                    experience.
+                  </li>
+                  <li>
+                    Once you're approved, bookings for your service in your
+                    counties are routed to you.
+                  </li>
+                </ul>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="mt-10 space-y-5">
               <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="name" className={LABEL_CLS}>
                   Full name
                 </label>
                 <input
@@ -377,16 +528,13 @@ function Contractors() {
                   required
                   value={formState.name}
                   onChange={handleChange}
-                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={INPUT_CLS}
                   placeholder="Your full name"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="companyName"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="companyName" className={LABEL_CLS}>
                   Company name
                 </label>
                 <input
@@ -397,16 +545,13 @@ function Contractors() {
                   required
                   value={formState.companyName}
                   onChange={handleChange}
-                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={INPUT_CLS}
                   placeholder="Your business name"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="email" className={LABEL_CLS}>
                   Email
                 </label>
                 <input
@@ -418,16 +563,13 @@ function Contractors() {
                   required
                   value={formState.email}
                   onChange={handleChange}
-                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={INPUT_CLS}
                   placeholder="you@example.com"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="phone" className={LABEL_CLS}>
                   Phone
                 </label>
                 <input
@@ -439,16 +581,13 @@ function Contractors() {
                   required
                   value={formState.phone}
                   onChange={handleChange}
-                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={INPUT_CLS}
                   placeholder="(555) 123-4567"
                 />
               </div>
 
               <div>
-                <label
-                  htmlFor="serviceType"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="serviceType" className={LABEL_CLS}>
                   Service type
                 </label>
                 <select
@@ -457,7 +596,7 @@ function Contractors() {
                   required
                   value={formState.serviceType}
                   onChange={handleChange}
-                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={INPUT_CLS}
                 >
                   <option value="" disabled>
                     Select a service…
@@ -473,11 +612,130 @@ function Contractors() {
                 </select>
               </div>
 
+              {/* ── Counties served (required) ── */}
               <div>
-                <label
-                  htmlFor="yearsExperience"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <span className={LABEL_CLS} id="counties-label">
+                  Counties you serve{" "}
+                  <span className="text-red-600" aria-hidden="true">
+                    *
+                  </span>
+                </span>
+                <p className="mt-1 text-sm text-gray-500">
+                  Required. Pick the counties you'll take work in, or tick
+                  statewide. We only route jobs to you in the counties you choose.
+                </p>
+
+                <label className="mt-3 flex min-h-[48px] cursor-pointer items-center gap-3 rounded-lg border border-gray-300 bg-white px-4 py-3 shadow-sm">
+                  <input
+                    type="checkbox"
+                    name="servesStatewide"
+                    checked={statewide}
+                    onChange={(e) => {
+                      setStatewide(e.target.checked);
+                      if (e.target.checked) {
+                        setCounties([]);
+                        setCountySearch("");
+                      }
+                      setSubmitError("");
+                    }}
+                    className={CHECKBOX_CLS}
+                  />
+                  <span className="text-base text-gray-900">
+                    I serve all of Tennessee
+                  </span>
+                </label>
+
+                {statewide ? (
+                  <p className="mt-3 rounded-lg bg-indigo-50 px-4 py-3 text-sm text-indigo-800">
+                    You'll be matched with jobs anywhere in Tennessee. Untick this
+                    if you'd rather choose specific counties.
+                  </p>
+                ) : (
+                  <>
+                    {counties.length > 0 && (
+                      <ul className="mt-3 flex flex-wrap gap-2">
+                        {counties.map((c) => (
+                          <li key={c}>
+                            <button
+                              type="button"
+                              onClick={() => toggleCounty(c)}
+                              className="inline-flex min-h-[40px] items-center gap-2 rounded-full bg-indigo-100 px-3 text-sm font-medium text-indigo-800 transition hover:bg-indigo-200"
+                            >
+                              {c} County
+                              <span aria-hidden="true">×</span>
+                              <span className="sr-only">Remove {c} County</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <input
+                      type="search"
+                      name="countySearch"
+                      value={countySearch}
+                      onChange={(e) => setCountySearch(e.target.value)}
+                      className={INPUT_CLS}
+                      placeholder="Search counties (e.g. Davidson)"
+                      aria-label="Search Tennessee counties"
+                      autoComplete="off"
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      Tip: Nashville is in Davidson County.
+                    </p>
+
+                    {visibleCounties.length > 0 ? (
+                      <ul
+                        aria-labelledby="counties-label"
+                        className="mt-2 divide-y divide-gray-100 overflow-hidden rounded-lg border border-gray-300 bg-white"
+                      >
+                        {visibleCounties.map((c) => (
+                          <li key={c}>
+                            <label className="flex min-h-[48px] cursor-pointer items-center gap-3 px-4 py-2">
+                              <input
+                                type="checkbox"
+                                checked={counties.includes(c)}
+                                onChange={() => toggleCounty(c)}
+                                className={CHECKBOX_CLS}
+                              />
+                              <span className="text-base text-gray-900">
+                                {c} County
+                              </span>
+                            </label>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
+                        No county matches “{countySearch}”. Check the spelling, or
+                        tick “I serve all of Tennessee” above.
+                      </p>
+                    )}
+
+                    {!countySearch.trim() && !showAllCounties && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllCounties(true)}
+                        className="mt-2 inline-flex min-h-[44px] items-center text-sm font-medium text-indigo-700 underline"
+                      >
+                        Browse all {TN_COUNTIES.length} counties
+                      </button>
+                    )}
+                    {!countySearch.trim() && showAllCounties && (
+                      <button
+                        type="button"
+                        onClick={() => setShowAllCounties(false)}
+                        className="mt-2 inline-flex min-h-[44px] items-center text-sm font-medium text-indigo-700 underline"
+                      >
+                        Hide county list
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="yearsExperience" className={LABEL_CLS}>
                   Years of experience
                 </label>
                 <select
@@ -486,7 +744,7 @@ function Contractors() {
                   required
                   value={formState.yearsExperience}
                   onChange={handleChange}
-                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={INPUT_CLS}
                 >
                   <option value="" disabled>
                     Select…
@@ -499,10 +757,7 @@ function Contractors() {
               </div>
 
               <div>
-                <label
-                  htmlFor="licenseNumber"
-                  className="block text-sm font-medium text-gray-700"
-                >
+                <label htmlFor="licenseNumber" className={LABEL_CLS}>
                   Tennessee business license number
                 </label>
                 <input
@@ -513,15 +768,31 @@ function Contractors() {
                   required
                   value={formState.licenseNumber}
                   onChange={handleChange}
-                  className="mt-1 block min-h-[48px] w-full rounded-lg border border-gray-300 px-4 py-3 text-base text-gray-900 shadow-sm placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className={INPUT_CLS}
                   placeholder="License number"
                 />
               </div>
 
+              {submitError && (
+                <p
+                  role="alert"
+                  className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700"
+                >
+                  {submitError}
+                </p>
+              )}
+
+              {!coverageChosen && (
+                <p className="text-sm font-medium text-amber-700">
+                  Choose at least one county, or tick “I serve all of Tennessee”,
+                  to submit.
+                </p>
+              )}
+
               <button
                 type="submit"
-                disabled={submitting}
-                className="min-h-[48px] w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60"
+                disabled={submitting || !coverageChosen}
+                className="min-h-[48px] w-full rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow-md transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {submitting ? "Submitting…" : "Submit Application"}
               </button>
