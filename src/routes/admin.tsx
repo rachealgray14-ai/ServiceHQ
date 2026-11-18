@@ -101,7 +101,7 @@ const adminJobs = createServerFn({ method: "POST" })
         JOIN service_requests sr ON sr.id = j.service_request_id
         JOIN customers c ON c.id = j.customer_id
         LEFT JOIN contractors ct ON ct.id = j.contractor_id
-        WHERE (${status} IS NULL OR j.status = ${status})
+        WHERE (${status}::text IS NULL OR j.status = ${status}::text)
         ORDER BY j.created_at DESC`;
       return rows.map((r) => ({
         id: r.id as number,
@@ -246,7 +246,7 @@ const adminContractors = createServerFn({ method: "POST" })
         SELECT id, name, company_name, email, phone, service_type, years_experience,
                license_number, insurance_info, status, service_radius_miles, tn_counties, created_at
         FROM contractors
-        WHERE (${status} IS NULL OR status = ${status})
+        WHERE (${status}::text IS NULL OR status = ${status}::text)
         ORDER BY created_at DESC`;
       return rows.map((r) => ({
         id: r.id as number,
@@ -342,9 +342,9 @@ const adminCustomers = createServerFn({ method: "POST" })
                (SELECT COUNT(*)::int FROM service_requests sr WHERE sr.customer_id = c.id) AS request_count,
                (SELECT COUNT(*)::int FROM jobs j WHERE j.customer_id = c.id) AS job_count
         FROM customers c
-        WHERE (${like} IS NULL
-               OR c.name ILIKE ${like} OR c.email ILIKE ${like}
-               OR c.phone ILIKE ${like} OR c.city ILIKE ${like})
+        WHERE (${like}::text IS NULL
+               OR c.name ILIKE ${like}::text OR c.email ILIKE ${like}::text
+               OR c.phone ILIKE ${like}::text OR c.city ILIKE ${like}::text)
         ORDER BY c.created_at DESC`;
       return rows.map((r) => ({
         id: r.id as number,
@@ -424,8 +424,8 @@ const adminPayments = createServerFn({ method: "POST" })
         JOIN jobs j ON j.id = p.job_id
         JOIN customers c ON c.id = j.customer_id
         LEFT JOIN contractors ct ON ct.id = j.contractor_id
-        WHERE (${type} IS NULL OR p.type = ${type})
-          AND (${status} IS NULL OR p.status = ${status})
+        WHERE (${type}::text IS NULL OR p.type = ${type}::text)
+          AND (${status}::text IS NULL OR p.status = ${status}::text)
         ORDER BY p.created_at DESC`;
       const [summary] = await q`
         SELECT COUNT(*)::int AS total,
@@ -1258,7 +1258,7 @@ function JobsSection({ password }: { password: string }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {rows!.map((j) => (
+              {rows?.map((j) => (
                 <tr
                   key={j.id}
                   onClick={() => setSelectedId(j.id)}
@@ -1577,7 +1577,7 @@ function ContractorsSection({ password }: { password: string }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {rows!.map((c) => (
+              {rows?.map((c) => (
                 <tr key={c.id} className="transition hover:bg-blue-50/60">
                   <td className="px-5 py-2.5">
                     <button
@@ -1893,7 +1893,7 @@ function CustomersSection({ password }: { password: string }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {rows!.map((c) => (
+              {rows?.map((c) => (
                 <tr
                   key={c.id}
                   onClick={() => setSelectedId(c.id)}
@@ -2172,7 +2172,7 @@ function PaymentsSection({ password }: { password: string }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {rows.map((p) => (
+                    {rows?.map((p) => (
                       <tr key={p.id} className="transition hover:bg-blue-50/60">
                         <td className="px-5 py-2.5 font-mono text-xs text-gray-500">#{p.id}</td>
                         <td className="px-3 py-2.5 font-mono text-xs text-gray-500">#{p.job_id}</td>
@@ -2282,7 +2282,7 @@ function DisputesSection({ password }: { password: string }) {
         <Empty label="No disputes. Keep it that way! 🎉" />
       ) : (
         <div className="divide-y divide-gray-50">
-          {rows!.map((d) => (
+          {rows?.map((d) => (
             <div key={d.id}>
               <button
                 type="button"
