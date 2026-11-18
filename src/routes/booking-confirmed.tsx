@@ -8,8 +8,9 @@ import { sql } from "../db";
  * Server-side: look up a booking by service_request id
  * ────────────────────────────────────────────────────────────── */
 
-const getBooking = createServerFn({ method: "POST" }).handler(
-  async (data: { id: number }) => {
+const getBooking = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { id: number })
+  .handler(async ({ data }) => {
     await ensureDatabaseSchema();
     const q = sql();
     const [row] = await q`
@@ -46,8 +47,7 @@ const getBooking = createServerFn({ method: "POST" }).handler(
       city: row.city,
       tnCounty: row.tn_county,
     };
-  },
-);
+  });
 
 export const Route = createFileRoute("/booking-confirmed")({
   component: BookingConfirmedPage,
@@ -87,11 +87,16 @@ function BookingConfirmedPage() {
       setNotFound(true);
       return;
     }
-    getBooking({ id }).then((res) => {
-      if (res) setBooking(res);
-      else setNotFound(true);
-      setLoading(false);
-    });
+    getBooking({ data: { id } })
+      .then((res) => {
+        if (res) setBooking(res);
+        else setNotFound(true);
+      })
+      .catch(() => {
+        // A failed lookup reads as "not found"; the raw error is never rendered.
+        setNotFound(true);
+      })
+      .finally(() => setLoading(false));
   }, [id]);
 
   return (
