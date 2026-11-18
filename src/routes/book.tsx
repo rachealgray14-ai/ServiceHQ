@@ -22,57 +22,76 @@ type BookingInput = {
   scheduledAt: string; // ISO-like "YYYY-MM-DDTHH:mm:ss" (window start)
 };
 
-const createBooking = createServerFn({ method: "POST" }).handler(
-  async (data: BookingInput) => {
-    await ensureDatabaseSchema();
-    const q = sql();
+/** Shown to the customer when a booking fails — never a database message. */
+export const BOOKING_FAILED_MESSAGE =
+  "We couldn't save your booking. Please try again, or call us.";
 
-    // Find or create the customer by email.
-    let customerId: number;
-    const [existing] = await q`SELECT id FROM customers WHERE email = ${data.email} LIMIT 1`;
-    if (existing) {
-      customerId = existing.id as number;
-    } else {
-      const [inserted] = await q`
-        INSERT INTO customers (name, email, phone, address, city, tn_county)
-        VALUES (${data.name}, ${data.email}, ${data.phone}, ${data.address},
-                ${data.city}, ${data.tnCounty})
-        RETURNING id`;
-      customerId = inserted.id as number;
+type BookingResult =
+  | { ok: true; requestId: number; jobId: number }
+  | { ok: false; message: string };
+
+const createBooking = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as BookingInput)
+  .handler(async ({ data }): Promise<BookingResult> => {
+    try {
+      return await saveBooking(data);
+    } catch (error) {
+      // The real error stays in the server log; the customer sees a short
+      // human message instead of a Postgres constraint violation.
+      console.error("createBooking failed:", error);
+      return { ok: false, message: BOOKING_FAILED_MESSAGE };
     }
+  });
 
-    // Insert the service request, then the pending job (unassigned contractor).
-    const [req] = await q`
-      INSERT INTO service_requests (customer_id, name, email, phone, service_type, message)
-      VALUES (${customerId}, ${data.name}, ${data.email}, ${data.phone},
-              ${data.serviceType}, ${data.message})
+async function saveBooking(data: BookingInput): Promise<BookingResult> {
+  await ensureDatabaseSchema();
+  const q = sql();
+
+  // Find or create the customer by email.
+  let customerId: number;
+  const [existing] = await q`SELECT id FROM customers WHERE email = ${data.email} LIMIT 1`;
+  if (existing) {
+    customerId = existing.id as number;
+  } else {
+    const [inserted] = await q`
+      INSERT INTO customers (name, email, phone, address, city, tn_county)
+      VALUES (${data.name}, ${data.email}, ${data.phone}, ${data.address},
+              ${data.city}, ${data.tnCounty})
       RETURNING id`;
-    const [job] = await q`
-      INSERT INTO jobs (service_request_id, customer_id, status, scheduled_at)
-      VALUES (${req.id}, ${customerId}, 'pending', ${data.scheduledAt}::timestamptz)
-      RETURNING id`;
+    customerId = inserted.id as number;
+  }
 
-    // Route the job: find a vetted contractor for this service type in the
-    // customer's county (this booking's county, not the stored customer row,
-    // which can be stale for returning customers) and assign them.
-    // Neon serverless has no multi-statement transaction here, so we keep the
-    // plain sequential `await q`...`` style. If nothing matches, the job simply
-    // stays unassigned and the request at 'new' — the booking still succeeds.
-    const contractorId = await findContractorForRequest({
-      serviceType: data.serviceType,
-      tnCounty: data.tnCounty,
-      q,
-    });
-    if (contractorId != null) {
-      await q`UPDATE jobs SET contractor_id = ${contractorId}, updated_at = NOW()
-              WHERE id = ${job.id}`;
-      await q`UPDATE service_requests SET status = 'assigned', updated_at = NOW()
-              WHERE id = ${req.id}`;
-    }
+  // Insert the service request, then the pending job (unassigned contractor).
+  const [req] = await q`
+    INSERT INTO service_requests (customer_id, name, email, phone, service_type, message)
+    VALUES (${customerId}, ${data.name}, ${data.email}, ${data.phone},
+            ${data.serviceType}, ${data.message})
+    RETURNING id`;
+  const [job] = await q`
+    INSERT INTO jobs (service_request_id, customer_id, status, scheduled_at)
+    VALUES (${req.id}, ${customerId}, 'pending', ${data.scheduledAt}::timestamptz)
+    RETURNING id`;
 
-    return { requestId: req.id as number, jobId: job.id as number };
-  },
-);
+  // Route the job: find a vetted contractor for this service type in the
+  // customer's county (this booking's county, not the stored customer row,
+  // which can be stale for returning customers) and assign them.
+  // Neon serverless has no multi-statement transaction here, so we keep the
+  // plain sequential `await q`...`` style. If nothing matches, the job simply
+  // stays unassigned and the request at 'new' — the booking still succeeds.
+  const contractorId = await findContractorForRequest({
+    serviceType: data.serviceType,
+    tnCounty: data.tnCounty,
+    q,
+  });
+  if (contractorId != null) {
+    await q`UPDATE jobs SET contractor_id = ${contractorId}, updated_at = NOW()
+            WHERE id = ${job.id}`;
+    await q`UPDATE service_requests SET status = 'assigned', updated_at = NOW()
+            WHERE id = ${req.id}`;
+  }
+
+  return { ok: true, requestId: req.id as number, jobId: job.id as number };
+}
 
 /* ──────────────────────────────────────────────────────────────
  * Booking data: 9 service categories with contextual questions
@@ -440,21 +459,29 @@ function BookPage() {
     try {
       const scheduledAt = `${dateKey}T${WINDOW_START[window]}:00:00`;
       const res = await createBooking({
-        name: contact.name,
-        email: contact.email,
-        phone: contact.phone,
-        address: contact.address,
-        city: contact.city,
-        tnCounty: contact.tnCounty,
-        serviceType: categoryId!,
-        message:
-          `${description}${Object.keys(answers).length ? `\n\nDetails: ${selectedLabels(category, answers)}` : ""}`.trim(),
-        scheduledAt,
+        data: {
+          name: contact.name,
+          email: contact.email,
+          phone: contact.phone,
+          address: contact.address,
+          city: contact.city,
+          tnCounty: contact.tnCounty,
+          serviceType: categoryId!,
+          message:
+            `${description}${Object.keys(answers).length ? `\n\nDetails: ${selectedLabels(category, answers)}` : ""}`.trim(),
+          scheduledAt,
+        },
       });
-      setResult(res);
+      if (!res || res.ok !== true) {
+        // The handler already logged the real error server-side.
+        setError(res && res.ok === false ? res.message : BOOKING_FAILED_MESSAGE);
+        return;
+      }
+      setResult({ requestId: res.requestId, jobId: res.jobId });
       setStep(6);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
+    } catch {
+      // Never surface a transport or database message to the customer.
+      setError(BOOKING_FAILED_MESSAGE);
     } finally {
       setSubmitting(false);
     }

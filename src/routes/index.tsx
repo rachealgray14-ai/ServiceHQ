@@ -23,7 +23,17 @@ const getBusinessName = createServerFn({ method: "GET" }).handler(async () => {
 
 // Handle service request form submissions in Postgres.
 const submitServiceRequest = createServerFn({ method: "POST" })
-  .handler(async (data: { name: string; email: string; phone: string; serviceType: string; message: string }) => {
+  .validator(
+    (input: unknown) =>
+      input as {
+        name: string;
+        email: string;
+        phone: string;
+        serviceType: string;
+        message: string;
+      },
+  )
+  .handler(async ({ data }) => {
     await ensureDatabaseSchema();
     const { sql } = await import("../db");
     await sql()`INSERT INTO service_requests (name, email, phone, service_type, message)
@@ -192,7 +202,7 @@ function Home() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await submitServiceRequest(formState);
+      await submitServiceRequest({ data: formState });
       setSubmitted(true);
     } catch {
       // Silently handle — submission is best-effort

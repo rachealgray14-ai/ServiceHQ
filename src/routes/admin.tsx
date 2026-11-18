@@ -38,12 +38,13 @@ async function withDb<T>(
   }
 }
 
-const adminLogin = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string }) => ({ ok: data.password === ADMIN_PASSWORD }),
-);
+const adminLogin = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string })
+  .handler(async ({ data }) => ({ ok: data.password === ADMIN_PASSWORD }));
 
-const adminOverview = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string }) => {
+const adminOverview = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const [statsRow] = await q`
@@ -83,11 +84,11 @@ const adminOverview = createServerFn({ method: "POST" }).handler(
         })),
       };
     });
-  },
-);
+  });
 
-const adminJobs = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string; status?: string | null }) => {
+const adminJobs = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string; status?: string | null })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const status = data.status || null;
@@ -100,7 +101,7 @@ const adminJobs = createServerFn({ method: "POST" }).handler(
         JOIN service_requests sr ON sr.id = j.service_request_id
         JOIN customers c ON c.id = j.customer_id
         LEFT JOIN contractors ct ON ct.id = j.contractor_id
-        WHERE (${status} IS NULL OR j.status = ${status})
+        WHERE (${status}::text IS NULL OR j.status = ${status}::text)
         ORDER BY j.created_at DESC`;
       return rows.map((r) => ({
         id: r.id as number,
@@ -117,11 +118,11 @@ const adminJobs = createServerFn({ method: "POST" }).handler(
         contractor_company: str(r.contractor_company),
       }));
     });
-  },
-);
+  });
 
-const adminJobDetail = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string; id: number }) => {
+const adminJobDetail = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string; id: number })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const [job] = await q`
@@ -187,17 +188,17 @@ const adminJobDetail = createServerFn({ method: "POST" }).handler(
         })),
       };
     });
-  },
-);
+  });
 
-const adminUpdateJob = createServerFn({ method: "POST" }).handler(
-  async (data: {
+const adminUpdateJob = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as {
     password: string;
     id: number;
     status?: string | null;
     contractorId?: number | null;
     priceQuoted?: number | null;
-  }) => {
+  })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const [job] = await q`SELECT service_request_id, status FROM jobs WHERE id = ${data.id}`;
@@ -221,8 +222,7 @@ const adminUpdateJob = createServerFn({ method: "POST" }).handler(
       }
       return { updated: true };
     });
-  },
-);
+  });
 
 function jobStatusToRequestStatus(jobStatus: string): string | null {
   const map: Record<string, string> = {
@@ -236,8 +236,9 @@ function jobStatusToRequestStatus(jobStatus: string): string | null {
   return map[jobStatus] ?? null;
 }
 
-const adminContractors = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string; status?: string | null }) => {
+const adminContractors = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string; status?: string | null })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const status = data.status || null;
@@ -245,7 +246,7 @@ const adminContractors = createServerFn({ method: "POST" }).handler(
         SELECT id, name, company_name, email, phone, service_type, years_experience,
                license_number, insurance_info, status, service_radius_miles, tn_counties, created_at
         FROM contractors
-        WHERE (${status} IS NULL OR status = ${status})
+        WHERE (${status}::text IS NULL OR status = ${status}::text)
         ORDER BY created_at DESC`;
       return rows.map((r) => ({
         id: r.id as number,
@@ -265,11 +266,11 @@ const adminContractors = createServerFn({ method: "POST" }).handler(
         created_at: iso(r.created_at),
       }));
     });
-  },
-);
+  });
 
-const adminContractorDetail = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string; id: number }) => {
+const adminContractorDetail = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string; id: number })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const [c] = await q`SELECT * FROM contractors WHERE id = ${data.id}`;
@@ -315,11 +316,11 @@ const adminContractorDetail = createServerFn({ method: "POST" }).handler(
         })),
       };
     });
-  },
-);
+  });
 
-const adminUpdateContractor = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string; id: number; status: string }) => {
+const adminUpdateContractor = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string; id: number; status: string })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       await q`
@@ -327,11 +328,11 @@ const adminUpdateContractor = createServerFn({ method: "POST" }).handler(
         WHERE id = ${data.id}`;
       return { updated: true };
     });
-  },
-);
+  });
 
-const adminCustomers = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string; search?: string | null }) => {
+const adminCustomers = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string; search?: string | null })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const search = data.search?.trim() || null;
@@ -341,9 +342,9 @@ const adminCustomers = createServerFn({ method: "POST" }).handler(
                (SELECT COUNT(*)::int FROM service_requests sr WHERE sr.customer_id = c.id) AS request_count,
                (SELECT COUNT(*)::int FROM jobs j WHERE j.customer_id = c.id) AS job_count
         FROM customers c
-        WHERE (${like} IS NULL
-               OR c.name ILIKE ${like} OR c.email ILIKE ${like}
-               OR c.phone ILIKE ${like} OR c.city ILIKE ${like})
+        WHERE (${like}::text IS NULL
+               OR c.name ILIKE ${like}::text OR c.email ILIKE ${like}::text
+               OR c.phone ILIKE ${like}::text OR c.city ILIKE ${like}::text)
         ORDER BY c.created_at DESC`;
       return rows.map((r) => ({
         id: r.id as number,
@@ -358,11 +359,11 @@ const adminCustomers = createServerFn({ method: "POST" }).handler(
         job_count: Number(r.job_count ?? 0),
       }));
     });
-  },
-);
+  });
 
-const adminCustomerDetail = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string; id: number }) => {
+const adminCustomerDetail = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string; id: number })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const [c] = await q`SELECT * FROM customers WHERE id = ${data.id}`;
@@ -407,11 +408,11 @@ const adminCustomerDetail = createServerFn({ method: "POST" }).handler(
         })),
       };
     });
-  },
-);
+  });
 
-const adminPayments = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string; type?: string | null; status?: string | null }) => {
+const adminPayments = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string; type?: string | null; status?: string | null })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const type = data.type || null;
@@ -423,8 +424,8 @@ const adminPayments = createServerFn({ method: "POST" }).handler(
         JOIN jobs j ON j.id = p.job_id
         JOIN customers c ON c.id = j.customer_id
         LEFT JOIN contractors ct ON ct.id = j.contractor_id
-        WHERE (${type} IS NULL OR p.type = ${type})
-          AND (${status} IS NULL OR p.status = ${status})
+        WHERE (${type}::text IS NULL OR p.type = ${type}::text)
+          AND (${status}::text IS NULL OR p.status = ${status}::text)
         ORDER BY p.created_at DESC`;
       const [summary] = await q`
         SELECT COUNT(*)::int AS total,
@@ -462,11 +463,11 @@ const adminPayments = createServerFn({ method: "POST" }).handler(
         },
       };
     });
-  },
-);
+  });
 
-const adminDisputes = createServerFn({ method: "POST" }).handler(
-  async (data: { password: string }) => {
+const adminDisputes = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as { password: string })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       const rows = await q`
@@ -491,16 +492,16 @@ const adminDisputes = createServerFn({ method: "POST" }).handler(
         contractor_name: str(d.contractor_name),
       }));
     });
-  },
-);
+  });
 
-const adminUpdateDispute = createServerFn({ method: "POST" }).handler(
-  async (data: {
+const adminUpdateDispute = createServerFn({ method: "POST" })
+  .validator((input: unknown) => input as {
     password: string;
     id: number;
     status: string;
     resolution?: string | null;
-  }) => {
+  })
+  .handler(async ({ data }) => {
     requireAuth(data.password);
     return withDb(async (q) => {
       await q`
@@ -511,8 +512,7 @@ const adminUpdateDispute = createServerFn({ method: "POST" }).handler(
         WHERE id = ${data.id}`;
       return { updated: true };
     });
-  },
-);
+  });
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
@@ -809,7 +809,7 @@ function LoginForm({ onSuccess }: { onSuccess: (password: string) => void }) {
     setBusy(true);
     setError("");
     try {
-      const res = await adminLogin({ password: input });
+      const res = await adminLogin({ data: { password: input } });
       if (res && res.ok) onSuccess(input);
       else setError("Incorrect password. Access denied.");
     } catch {
@@ -983,7 +983,7 @@ function OverviewSection({ password }: { password: string }) {
   useEffect(() => {
     let live = true;
     setLoading(true);
-    adminOverview({ password }).then((res) => {
+    adminOverview({ data: { password } }).then((res) => {
       if (!live) return;
       setLoading(false);
       if (res.ok) {
@@ -1201,7 +1201,7 @@ function JobsSection({ password }: { password: string }) {
   useEffect(() => {
     let live = true;
     setRows(null);
-    adminJobs({ password, status: statusFilter || null }).then((res) => {
+    adminJobs({ data: { password, status: statusFilter || null } }).then((res) => {
       if (!live) return;
       if (res.ok) {
         setRows(res.data);
@@ -1258,7 +1258,7 @@ function JobsSection({ password }: { password: string }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {rows!.map((j) => (
+              {rows?.map((j) => (
                 <tr
                   key={j.id}
                   onClick={() => setSelectedId(j.id)}
@@ -1319,7 +1319,7 @@ function JobDetailModal({
   useEffect(() => {
     let live = true;
     setLoading(true);
-    adminJobDetail({ password, id: jobId }).then((res) => {
+    adminJobDetail({ data: { password, id: jobId } }).then((res) => {
       if (!live) return;
       setLoading(false);
       if (res.ok && res.data) {
@@ -1341,13 +1341,13 @@ function JobDetailModal({
   const save = async () => {
     setSaving(true);
     setSaveError("");
-    const res = await adminUpdateJob({
+    const res = await adminUpdateJob({ data: {
       password,
       id: jobId,
       status,
       contractorId: contractorId ? Number(contractorId) : null,
       priceQuoted: priceQuoted ? Number(priceQuoted) : null,
-    });
+    } });
     setSaving(false);
     if (res.ok && res.data.updated) onSaved();
     else setSaveError(res.ok ? "No changes saved." : res.error);
@@ -1517,7 +1517,7 @@ function ContractorsSection({ password }: { password: string }) {
   useEffect(() => {
     let live = true;
     setRows(null);
-    adminContractors({ password, status: statusFilter || null }).then((res) => {
+    adminContractors({ data: { password, status: statusFilter || null } }).then((res) => {
       if (!live) return;
       if (res.ok) {
         setRows(res.data);
@@ -1532,7 +1532,7 @@ function ContractorsSection({ password }: { password: string }) {
   }, [password, statusFilter, tick]);
 
   const setStatus = async (id: number, status: string) => {
-    const res = await adminUpdateContractor({ password, id, status });
+    const res = await adminUpdateContractor({ data: { password, id, status } });
     if (res.ok) refresh();
   };
 
@@ -1577,7 +1577,7 @@ function ContractorsSection({ password }: { password: string }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {rows!.map((c) => (
+              {rows?.map((c) => (
                 <tr key={c.id} className="transition hover:bg-blue-50/60">
                   <td className="px-5 py-2.5">
                     <button
@@ -1697,7 +1697,7 @@ function ContractorProfileModal({
   useEffect(() => {
     let live = true;
     setLoading(true);
-    adminContractorDetail({ password, id: contractorId }).then((res) => {
+    adminContractorDetail({ data: { password, id: contractorId } }).then((res) => {
       if (!live) return;
       setLoading(false);
       if (res.ok && res.data) {
@@ -1841,7 +1841,7 @@ function CustomersSection({ password }: { password: string }) {
   useEffect(() => {
     let live = true;
     setRows(null);
-    adminCustomers({ password, search: search || null }).then((res) => {
+    adminCustomers({ data: { password, search: search || null } }).then((res) => {
       if (!live) return;
       if (res.ok) {
         setRows(res.data);
@@ -1893,7 +1893,7 @@ function CustomersSection({ password }: { password: string }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {rows!.map((c) => (
+              {rows?.map((c) => (
                 <tr
                   key={c.id}
                   onClick={() => setSelectedId(c.id)}
@@ -1955,7 +1955,7 @@ function CustomerDetailModal({
   useEffect(() => {
     let live = true;
     setLoading(true);
-    adminCustomerDetail({ password, id: customerId }).then((res) => {
+    adminCustomerDetail({ data: { password, id: customerId } }).then((res) => {
       if (!live) return;
       setLoading(false);
       if (res.ok && res.data) {
@@ -2096,7 +2096,7 @@ function PaymentsSection({ password }: { password: string }) {
   useEffect(() => {
     let live = true;
     setRows(null);
-    adminPayments({ password, type: typeFilter || null, status: statusFilter || null }).then(
+    adminPayments({ data: { password, type: typeFilter || null, status: statusFilter || null } }).then(
       (res) => {
         if (!live) return;
         if (res.ok) {
@@ -2172,7 +2172,7 @@ function PaymentsSection({ password }: { password: string }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {rows.map((p) => (
+                    {rows?.map((p) => (
                       <tr key={p.id} className="transition hover:bg-blue-50/60">
                         <td className="px-5 py-2.5 font-mono text-xs text-gray-500">#{p.id}</td>
                         <td className="px-3 py-2.5 font-mono text-xs text-gray-500">#{p.job_id}</td>
@@ -2229,7 +2229,7 @@ function DisputesSection({ password }: { password: string }) {
   useEffect(() => {
     let live = true;
     setRows(null);
-    adminDisputes({ password }).then((res) => {
+    adminDisputes({ data: { password } }).then((res) => {
       if (!live) return;
       if (res.ok) {
         setRows(res.data);
@@ -2254,12 +2254,12 @@ function DisputesSection({ password }: { password: string }) {
     if (openId == null) return;
     setSaving(true);
     setSaveError("");
-    const res = await adminUpdateDispute({
+    const res = await adminUpdateDispute({ data: {
       password,
       id: openId,
       status: statusDraft,
       resolution: resolutionDraft.trim() || null,
-    });
+    } });
     setSaving(false);
     if (res.ok && res.data.updated) {
       setOpenId(null);
@@ -2282,7 +2282,7 @@ function DisputesSection({ password }: { password: string }) {
         <Empty label="No disputes. Keep it that way! 🎉" />
       ) : (
         <div className="divide-y divide-gray-50">
-          {rows!.map((d) => (
+          {rows?.map((d) => (
             <div key={d.id}>
               <button
                 type="button"
